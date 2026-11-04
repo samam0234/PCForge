@@ -5,6 +5,9 @@
 - 상세 규칙과 인수인계: [Docs/plan/PCForge_인수인계.md](Docs/plan/PCForge_인수인계.md)
 - 기획서: [Docs/plan/PCForge_기획서_v1.2.md](Docs/plan/PCForge_기획서_v1.2.md)
 - 아키텍처: [Docs/Architecture/pcforge_architecture.md](Docs/Architecture/pcforge_architecture.md)
+- 실행 방법과 문제 해결: [Docs/guidance/local-setup.md](Docs/guidance/local-setup.md)
+- API 형식: [Docs/guidance/api-reference.md](Docs/guidance/api-reference.md)
+- 검증 기록: [Docs/vaildates/skeleton-validation.md](Docs/vaildates/skeleton-validation.md)
 
 규칙의 원본은 인수인계 문서입니다. 에이전트별 파일(`.Claude/CLAUDE.md` 등)은 이 파일을 가리키기만 하며, 규칙을 중복해서 쓰지 않습니다.
 
