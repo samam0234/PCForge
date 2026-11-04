@@ -96,6 +96,6 @@ RequirementsAnalyzer → SearchPlanner → SiteSearcher → ResultNormalizer
 
 ## 미정 사항
 
-- 로컬 LLM 모델: 인수인계 문서는 `qwen3:8b`·`gemma4`, 기획서는 `Qwen2.5` 계열로 서로 다릅니다. Phase 1 시작 전에 정해야 합니다.
+- 로컬 LLM 모델: 인수인계 문서와 기획서 모두 한국어 + Tool Calling 후보로 `Qwen2.5`(7B/14B/32B), `Llama 3.1/3.2 Instruct`를 두고, 경량 후보로 `Llama 3.2 3B`, `Gemma 2 9B`, `Phi-3.5`를 둡니다. 어느 모델·크기를 쓸지는 Phase 1에서 설치해 보고 정합니다.
 - 인증 방식: JWT와 세션 중 선택, 비밀번호 저장 컬럼 추가 여부.
 - 벡터 스토어: 개발은 Chroma, 이후 FAISS 또는 pgvector.
