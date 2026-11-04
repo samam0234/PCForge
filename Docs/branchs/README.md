@@ -58,6 +58,7 @@ YYMMDD_HHMM_[id]_[이름]_[브랜치].md
 | [013](261105_0729_013_while_feature-frontend.md) | `feature/frontend` | `docs(frontend): sv 기본 README를 프로젝트 README로 교체` |
 | [014](261105_0733_014_while_feature-docs.md) | `feature/docs` | `docs(branchs): Docs 목차와 커밋 기록 작성법 안내 추가` |
 | [015](261105_0733_015_while_feature-repo-setup.md) | `feature/repo-setup` | `docs(repo): 루트 README에 Docs 목차와 커밋 기록 작성법 링크 추가` |
+| [016](261105_0735_016_while_feature-docs.md) | `feature/docs` | `docs(branchs): 총 병합 기록 추가` (병합 기록) |
 
 새 기록을 만들 때 이 표에도 한 줄을 추가합니다.
 
