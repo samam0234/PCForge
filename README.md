@@ -270,7 +270,7 @@ cd ai-server
 | [API 레퍼런스](Docs/guidance/api-reference.md) | 엔드포인트와 응답 예시 |
 | [검증 기록](Docs/vaildates/skeleton-validation.md) | 확인한 것과 확인하지 못한 것 |
 | [Docs 목차](Docs/README.md) | 문서 폴더별 용도와 위치 |
-| [커밋 기록](Docs/branchs/) | 커밋·병합 기록 ([작성법](Docs/branchs/README.md)) |
+| [커밋 기록](Docs/branchs/commits/) | 커밋·병합 기록 ([작성법](Docs/branchs/README.md)) |
 
 ---
 
@@ -279,7 +279,7 @@ cd ai-server
 규칙의 원본은 [인수인계 문서](Docs/plan/PCForge_인수인계.md)이고, 아래는 핵심 요약입니다.
 
 - **커밋 메시지:** `type(scope): 한국어 요약` (type·scope는 영어). 예: `feat(frontend): 요구사항 입력 폼 추가`
-- **커밋 기록:** 커밋마다 `Docs/branchs/`에 기록 파일을 함께 커밋합니다. 이름 규칙과 항목은 [작성법](Docs/branchs/README.md)을 따릅니다.
+- **커밋 기록:** 커밋마다 `Docs/branchs/commits/`(필수 하위 폴더)에 기록 파일을 함께 커밋합니다. 이름 규칙과 항목은 [작성법](Docs/branchs/README.md)을 따릅니다.
 - **브랜치:** `feature/*`에서만 작업하고, 영역별 고정 브랜치를 재사용합니다. (현재 `repo-setup`, `docs`, `backend`, `ai-server`, `frontend`)
 - **병합:** 모든 커밋이 끝난 뒤 마지막에 한 번만 `--no-ff`로 `develop` → `main` 순서로 병합합니다. 지시 없이는 병합·푸시하지 않습니다.
 
