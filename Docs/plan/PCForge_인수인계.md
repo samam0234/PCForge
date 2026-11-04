@@ -65,7 +65,8 @@
 | 기타 | JWT/세션, SQLx, httpx, Playwright(선택), Chroma/FAISS/pgvector | 인증, DB, 통신, 검색 보조, 벡터 스토어 | - |
 
 **로컬 LLM 추천 (Ollama / LM Studio)**  
-한국어 + Tool Calling 경량 및 우수: Qwen3:8b , gemma4 (e4b, 12B)
+한국어 + Tool Calling 우수: Qwen2.5 (7B/14B/32B), Llama 3.1/3.2 Instruct  
+경량: Llama 3.2 3B, Gemma 2 9B, Phi-3.5
 
 **RAG**: Chroma(개발) / FAISS 또는 pgvector, 로컬 임베딩 (nomic-embed, bge-m3), PC 호환성 가이드·칩셋·벤치마크 요약 문서
 
@@ -164,15 +165,15 @@ pcforge/
 ### Docs 폴더 용도 (필수·예외 없음)
 | 폴더 | 용도 |
 |------|------|
-| [plan/](../plan/) | 초기 기획·로직·DB·배포 계획 |
-| [Architecture/](../Architecture/) | 시스템·계층·데이터 흐름 아키텍처 |
-| [branchs/](../branchs/) | 브랜치·커밋 기록 (**템플릿 필수**) |
-| [find_debug/](../find_debug/) | 작업/실행 디버깅 일일 기록 |
-| [guidance/](../guidance/) | 기능·실행 가이드 |
-| [trainings/](../trainings/) | 학습·연구 정리 |
-| [repeater/](../repeater/) | 서버 연결·인프라 장애와 해결 |
-| [vaildates/](../vaildates/) | 검증·체크리스트 |
-| [web_management/](../web_management/) | 배포 전/배포 시 웹 관리 기록 |
+| [plan/](./Docs/plan/) | 초기 기획·로직·DB·배포 계획 |
+| [Architecture/](./Docs/Architecture/) | 시스템·계층·데이터 흐름 아키텍처 |
+| [branchs/](./Docs/branchs/) | 브랜치·커밋 기록 (**템플릿 필수**, **commits/ 하위 폴더 필수**) |
+| [find_debug/](./Docs/find_debug/) | 작업/실행 디버깅 일일 기록 |
+| [guidance/](./Docs/guidance/) | 기능·실행 가이드 |
+| [trainings/](./Docs/trainings/) | 학습·연구 정리 |
+| [repeater/](./Docs/repeater/) | 서버 연결·인프라 장애와 해결 |
+| [vaildates/](./Docs/vaildates/) | 검증·체크리스트 |
+| [web_management/](./Docs/web_management/) | 배포 전/배포 시 웹 관리 기록 |
 
 - `Docs/branchs/COMMIT_TEMPLATE.md` 또는 `_template.md`는 절대 삭제하지 않는다.
 - 새 문서는 반드시 위 폴더 중 적절한 곳에 배치한다.
@@ -209,12 +210,14 @@ pcforge/
   - `feat: 추천 폼 추가` (scope 누락)
   - `fix(backend): fixed the bug` (영어 본문)
 
-### 6.2 커밋 기록 문서화 (필수)
+### 6.2 커밋 기록 문서화 (필수·예외 없음)
 모든 커밋 시 아래 규칙으로 기록 파일을 생성·커밋한다.
-- **경로**: `Docs/branchs/YYMMDD_HHMM_[id]_[이름]_[브랜치].md`
-- **예시**: `Docs/branchs/261105_0630_001_WHILE496_feature-recommend.md`
+- **경로**: `Docs/branchs/commits/YYMMDD_HHMM_[id]_[이름]_[브랜치].md`  
+  (반드시 `branchs/commits/` 하위 폴더에 저장)
+- **예시**: `Docs/branchs/commits/261105_0740_001_WHILE496_feature-recommend.md`
 - 템플릿: `Docs/branchs/COMMIT_TEMPLATE.md`
 - 기록 파일도 같은 브랜치에 반드시 커밋한다.
+- `Docs/branchs/commits/` 폴더는 필수이며 삭제하지 않는다.
 
 ### 6.3 브랜치 전략
 - 작업은 **`feature/*`** 에서만 한다.
