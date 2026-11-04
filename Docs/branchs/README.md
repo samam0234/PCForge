@@ -59,9 +59,13 @@ YYMMDD_HHMM_[id]_[이름]_[브랜치].md
 | [014](261105_0733_014_while_feature-docs.md) | `feature/docs` | `docs(branchs): Docs 목차와 커밋 기록 작성법 안내 추가` |
 | [015](261105_0733_015_while_feature-repo-setup.md) | `feature/repo-setup` | `docs(repo): 루트 README에 Docs 목차와 커밋 기록 작성법 링크 추가` |
 | [016](261105_0735_016_while_feature-docs.md) | `feature/docs` | `docs(branchs): 총 병합 기록 추가` (병합 기록) |
+| [hil](261105_0739_017_while_feature-repo-setup.md) | `feature/repo-setup` | `docs(branchs): 커밋 기록 001·007을 템플릿 항목에 맞게 보완` |
+| [hil](261105_0739_018_while_feature-repo-setup.md) | `feature/repo-setup` | `docs(repo): README 동작 표기를 검증 범위에 맞게 수정` |
+| [hil](261105_0741_019_while_feature-docs.md) | `feature/docs` | `docs(branchs): 커밋 기록 002·006·008·009를 템플릿 항목에 맞게 보완` |
+| [hil](261105_0739_020_while_feature-backend.md) | `feature/backend` | `docs(branchs): 커밋 기록 003·010·011을 템플릿 항목에 맞게 보완` |
+| [hil](261105_0739_021_while_feature-ai-server.md) | `feature/ai-server` | `docs(branchs): 커밋 기록 004·012를 템플릿 항목에 맞게 보완` |
+| [hil](261105_0739_022_while_feature-frontend.md) | `feature/frontend` | `docs(branchs): 커밋 기록 005·013을 템플릿 항목에 맞게 보완` |
+| [hil](261105_0739_023_while_feature-frontend.md) | `feature/frontend` | `docs(frontend): README 상태 표기를 검증 범위에 맞게 수정` |
+| [hil](261105_0741_024_while_feature-docs.md) | `feature/docs` | `docs(branchs): 총 병합 기록 추가` (병합 기록) |
 
 새 기록을 만들 때 이 표에도 한 줄을 추가합니다.
-
-## 알려진 한계
-
-001~013번 기록에는 템플릿의 **변경 이유** 항목이 없습니다. 014번부터 템플릿의 항목을 모두 채웁니다.

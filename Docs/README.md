@@ -6,7 +6,7 @@ PCForge의 모든 문서는 이 폴더 아래 용도별 하위 폴더에 둡니�
 |------|------|-----------|
 | [plan/](plan/) | 초기 기획·로직·DB·배포 계획 | [기획서 v1.2](plan/PCForge_기획서_v1.2.md), [인수인계](plan/PCForge_인수인계.md) |
 | [Architecture/](Architecture/) | 시스템·계층·데이터 흐름 아키텍처 | [pcforge_architecture.md](Architecture/pcforge_architecture.md) |
-| [branchs/](branchs/) | 브랜치·커밋 기록 (**템플릿 필수**) | 커밋 기록 16건, [작성법](branchs/README.md) |
+| [branchs/](branchs/) | 브랜치·커밋 기록 (**템플릿 필수**) | 커밋 기록 24건, [작성법](branchs/README.md) |
 | [find_debug/](find_debug/) | 작업·실행 디버깅 일일 기록 | 없음 |
 | [guidance/](guidance/) | 기능·실행 가이드 | [local-setup.md](guidance/local-setup.md), [api-reference.md](guidance/api-reference.md) |
 | [trainings/](trainings/) | 학습·연구 정리 | 없음 |
