@@ -69,5 +69,15 @@ Docs/branchs/commits/YYMMDD_HHMM_[id]_[이름]_[브랜치].md
 | [022](commits/261105_0739_022_while_feature-frontend.md) | `feature/frontend` | `docs(branchs): 커밋 기록 005·013을 템플릿 항목에 맞게 보완` |
 | [023](commits/261105_0739_023_while_feature-frontend.md) | `feature/frontend` | `docs(frontend): README 상태 표기를 검증 범위에 맞게 수정` |
 | [024](commits/261105_0741_024_while_feature-docs.md) | `feature/docs` | `docs(branchs): 총 병합 기록 추가` (병합 기록) |
+| [025](commits/261105_0746_025_while_feature-repo-setup.md) | `feature/repo-setup` | `docs(branchs): 커밋 기록을 branchs/commits/ 하위 폴더로 이동` |
+| [026](commits/261105_0745_026_while_feature-docs.md) | `feature/docs` | `docs(plan): 갱신된 인수인계 문서 반영 (commits 하위 폴더, 모델 목록)` |
+| [027](commits/261105_0746_027_while_feature-docs.md) | `feature/docs` | `docs(branchs): 커밋 기록을 branchs/commits/ 하위 폴더로 이동` |
+| [028](commits/261105_0746_028_while_feature-backend.md) | `feature/backend` | `docs(branchs): 커밋 기록을 branchs/commits/ 하위 폴더로 이동` |
+| [029](commits/261105_0746_029_while_feature-ai-server.md) | `feature/ai-server` | `docs(branchs): 커밋 기록을 branchs/commits/ 하위 폴더로 이동` |
+| [030](commits/261105_0746_030_while_feature-ai-server.md) | `feature/ai-server` | `chore(ai-server): 예시 OLLAMA_MODEL을 인수인계 문서의 추천 모델로 변경` |
+| [031](commits/261105_0746_031_while_feature-frontend.md) | `feature/frontend` | `docs(branchs): 커밋 기록을 branchs/commits/ 하위 폴더로 이동` |
+| [032](commits/261105_0747_032_while_feature-docs.md) | `feature/docs` | `docs(branchs): 총 병합 기록 추가` (병합 기록) |
+| [033](commits/261105_0748_033_while_feature-repo-setup.md) | `feature/repo-setup` | `docs(branchs): 누락된 커밋 기록을 branchs/commits/ 하위 폴더로 이동` |
+| [034](commits/261105_0748_034_while_feature-backend.md) | `feature/backend` | `docs(branchs): 누락된 커밋 기록을 branchs/commits/ 하위 폴더로 이동` |
 
 새 기록을 만들 때 이 표에도 한 줄을 추가합니다.
