@@ -1,5 +1,7 @@
 # 커밋 기록
 
+## 기본 정보
+
 - 일시: 2026-11-05 07:29
 - 작성자: while
 - 브랜치: feature/backend
@@ -10,9 +12,15 @@
 - localhost로 두면 Windows에서 백엔드가 DB에 연결하지 못하고 /health가 database: down 반환
 - 127.0.0.1로 바꾸면 정상 연결됨을 확인
 
+## 변경 이유
+
+README 절차를 따라 해 보다가 `DATABASE_URL`을 `localhost`로 두면 백엔드가 DB에 연결하지 못하고 `/health`가 `database: down`을 반환하는 것을 발견했다.
+
 ## 검증
 
-- 문서 속 명령과 수치는 임시 환경(PostgreSQL 컨테이너, 로컬 서버)에서 직접 실행해 확인함 (Docs/vaildates/skeleton-validation.md 참고)
+- `localhost`는 3회 모두 `database: down`, `127.0.0.1`은 3회 모두 `up` (임시 PostgreSQL, 2026-11-05)
+- `AI_SERVER_URL`은 `localhost`, `127.0.0.1` 모두 추천 요청 200
+- 원인은 확인하지 못함 (`sqlx-cli`는 `localhost`로도 연결됨)
 
 ## 남은 작업
 
