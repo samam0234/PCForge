@@ -705,8 +705,22 @@ def knowledge() -> list[dict]:
     ]
 
 
+def keep_urls(listings: list[dict]) -> None:
+    if not CATALOG_PATH.exists():
+        return
+    try:
+        current = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return
+    urls = {item["id"]: item["url"] for item in current.get("products", []) if item.get("url")}
+    for item in listings:
+        if item["id"] in urls:
+            item["url"] = urls[item["id"]]
+
+
 def main() -> None:
     listings = expand(bases())
+    keep_urls(listings)
     catalog = {
         "snapshot": "2026-11-01",
         "price_kind": "catalog_reference",

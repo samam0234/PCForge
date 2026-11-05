@@ -85,5 +85,6 @@ Docs/branchs/commits/YYMMDD_HHMM_[id]_[이름]_[브랜치].md
 | [038](commits/261105_0903_038_while_feature-live-catalog.md) | `feature/live-catalog` | `feat(frontend): 판매 페이지 증거와 단종 표시를 추가` |
 | [039](commits/261105_0904_039_while_feature-live-catalog.md) | `feature/live-catalog` | `docs(guidance): 실시간 상품 수집 방법을 추가` |
 | [040](commits/261105_0905_040_while_feature-live-catalog.md) | `feature/live-catalog` | `docs(branchs): 총 병합 기록 추가` (병합 기록) |
+| [041](commits/261105_1146_041_while_feature-llm-brief.md) | `feature/llm-brief` | `feat(catalog): 재고 상태와 예산 전체를 목록에 반영` |
 
 새 기록을 만들 때 이 표에도 한 줄을 추가합니다.

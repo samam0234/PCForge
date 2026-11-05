@@ -273,7 +273,12 @@ def merge_previous(listings: dict[str, dict], seen: set[str], previous: list[dic
         item_id = old.get("id")
         if not item_id or item_id in merged:
             continue
-        if complete and old.get("availability", "selling") == "selling" and item_id not in seen:
+        if (
+            complete
+            and old.get("source") == "naver"
+            and old.get("availability", "selling") == "selling"
+            and item_id not in seen
+        ):
             retired = dict(old)
             retired["availability"] = "sold"
             retired["summary"] = f"{old.get('model', '')} 이전 수집에 있던 매물이 이번 검색에서 빠졌습니다. 판매가 끝난 것으로 보고 추천에서 제외합니다.".strip()
