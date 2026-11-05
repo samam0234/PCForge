@@ -88,5 +88,11 @@ Docs/branchs/commits/YYMMDD_HHMM_[id]_[이름]_[브랜치].md
 | [041](commits/261105_1146_041_while_feature-llm-brief.md) | `feature/llm-brief` | `feat(catalog): 재고 상태와 예산 전체를 목록에 반영` |
 | [042](commits/261105_1148_042_while_feature-llm-brief.md) | `feature/llm-brief` | `feat(backend): 추천 요청을 검증하고 메모를 언어 모델로 읽는다` |
 | [043](commits/261105_1149_043_while_feature-llm-brief.md) | `feature/llm-brief` | `docs(branchs): 총 병합 기록 추가` (병합 기록) |
+| [044](commits/261105_1320_044_while_feature-ai-server.md) | `feature/ai-server` | `fix(ai-server): 호환 메모 검색마다 문서를 다시 임베딩하지 않게 변경` |
+| [045](commits/261105_1320_045_while_feature-ai-server.md) | `feature/ai-server` | `feat(ai-server): 도구를 호출하는 상담 에이전트와 스트리밍 API를 추가` |
+| [046](commits/261105_1320_046_while_feature-backend.md) | `feature/backend` | `feat(backend): 상담 응답을 전달하는 /api/chat을 추가` |
+| [047](commits/261105_1320_047_while_feature-frontend.md) | `feature/frontend` | `feat(frontend): 상담 페이지와 응답 스트리밍 화면을 추가` |
+| [048](commits/261105_1320_048_while_feature-docs.md) | `feature/docs` | `docs(guidance): 상담 에이전트 가이드와 검증 기록을 추가` |
+| [049](commits/261105_1320_049_while_feature-docs.md) | `feature/docs` | `docs(branchs): 총 병합 기록 추가` (병합 기록) |
 
 새 기록을 만들 때 이 표에도 한 줄을 추가합니다.
