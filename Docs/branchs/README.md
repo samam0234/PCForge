@@ -82,5 +82,6 @@ Docs/branchs/commits/YYMMDD_HHMM_[id]_[이름]_[브랜치].md
 | [035](commits/261105_0900_035_while_feature-live-catalog.md) | `feature/live-catalog` | `feat(data): 부품 기준 카탈로그와 호환 메모를 추가` |
 | [036](commits/261105_0901_036_while_feature-live-catalog.md) | `feature/live-catalog` | `feat(ai-server): 판매 링크 수집과 로컬 추천을 연결` |
 | [037](commits/261105_0902_037_while_feature-live-catalog.md) | `feature/live-catalog` | `feat(backend): 로그인과 판매 상태 카탈로그 API를 추가` |
+| [038](commits/261105_0903_038_while_feature-live-catalog.md) | `feature/live-catalog` | `feat(frontend): 판매 페이지 증거와 단종 표시를 추가` |
 
 새 기록을 만들 때 이 표에도 한 줄을 추가합니다.
