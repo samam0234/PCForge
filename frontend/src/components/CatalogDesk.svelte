@@ -47,7 +47,8 @@
 		{ title: '구매처와 상태', note: '색·소음은 회원', keys: ['shop', 'grade', 'color', 'noise', 'power'] }
 	];
 	const LABEL = Object.fromEntries(FIELDS.map((field) => [field.key, field.label])) as Record<FieldKey, string>;
-	const BUDGETS = [1_000_000, 1_500_000, 2_000_000, 3_000_000];
+	const BUDGETS = [1_000_000, 1_500_000, 2_000_000, 3_000_000, 5_000_000, 10_000_000, 20_000_000];
+	const FLOORS = [10_000_000, 20_000_000];
 	const PRIORITIES = ['가격', '성능', '소음', '전력'];
 	const SHORTLIST_KEY = 'pcforge.shortlist';
 	const LOCKED = ['model', 'material', 'color', 'noise'];
@@ -64,6 +65,9 @@
 		모니터: '#7a2f5d',
 		키보드: '#55606b',
 		마우스: '#55606b',
+		노트북: '#1f4e8c',
+		데스크탑: '#2f5d50',
+		PC부품: '#6d655a',
 		케이스팬: '#2a7a8c'
 	};
 
@@ -84,12 +88,22 @@
 		power: '',
 		grade: '',
 		source: '',
+		availability: '',
+		price_min: '',
 		offset: 0
 	});
 	const SOURCES = [
 		{ value: '', label: '전체' },
+		{ value: 'market', label: '판매 링크' },
 		{ value: 'naver', label: '실시간 매물' },
 		{ value: 'reference', label: '기준 시세' }
+	] as const;
+	const STOCK = [
+		{ value: '', label: '재고 전체' },
+		{ value: 'selling', label: '판매중' },
+		{ value: 'sold', label: '판매완료' },
+		{ value: 'discontinued', label: '단종' },
+		{ value: 'stopped', label: '판매중단' }
 	] as const;
 	let unlimited = $state(false);
 	let notes = $state('');
@@ -191,6 +205,8 @@
 			if (field.key !== 'price_max') filters[field.key] = '';
 		}
 		filters.source = '';
+		filters.availability = '';
+		filters.price_min = '';
 		filters.offset = 0;
 	}
 
@@ -219,17 +235,24 @@
 	}
 
 	function stale(item: CatalogItem) {
-		return item.availability === 'discontinued' || item.availability === 'sold' || item.availability === 'upcoming' || item.availability === 'unverified';
+		return item.availability === 'discontinued' || item.availability === 'sold' || item.availability === 'stopped' || item.availability === 'upcoming' || item.availability === 'unverified';
 	}
 
 	function offerable(item: CatalogItem) {
 		if (stale(item)) return false;
-		if (item.source === 'naver') return item.availability === 'selling' && Boolean(item.url);
+		if (item.source === 'naver' || item.source === 'market') return item.availability === 'selling' && Boolean(item.url);
 		return true;
+	}
+
+	function linkLabel(item: CatalogItem) {
+		const url = item.url ?? '';
+		if (url.includes('prod.danawa.com') && item.shop !== '다나와') return '상품 페이지';
+		return '원본 링크';
 	}
 
 	function closedLabel(item: CatalogItem) {
 		if (item.availability === 'sold') return '판매완료';
+		if (item.availability === 'stopped') return '판매중단';
 		if (item.availability === 'upcoming') return '판매예정';
 		if (item.availability === 'unverified') return '링크 없음';
 		return '단종';
@@ -278,14 +301,15 @@
 			localError = '추천을 받으려면 용도를 고르세요. 목록은 용도를 비운 채로 넓게 볼 수 있습니다.';
 			return;
 		}
-		if (!Number.isFinite(budget) || budget <= 0) {
-			localError = '예산은 1원 이상이어야 합니다.';
+		if (!Number.isFinite(budget) || budget < 0) {
+			localError = '예산은 0원 이상이어야 합니다.';
 			return;
 		}
+		const spend = budget > 0 ? budget : 200_000_000;
 		const selected = shortlist.filter(offerable).slice(0, limit);
 		const body: RecommendRequest = {
 			purpose: filters.purpose,
-			budget_krw: budget,
+			budget_krw: spend,
 			condition: filters.condition === 'new' || filters.condition === 'used' ? filters.condition : 'mixed',
 			selected_ids: selected.map((item) => item.id),
 			notes: member ? notes : '',
@@ -326,7 +350,7 @@
 			<div><dt>쇼핑몰</dt><dd>{catalog?.facets.shop?.length ?? '—'}</dd></div>
 			<div><dt>부품 분류</dt><dd>{catalog?.facets.category?.length ?? '—'}</dd></div>
 			{#if catalog?.live_count}
-				<div><dt>실시간 갱신</dt><dd>{stamp(catalog.live_fetched_at)}</dd></div>
+				<div><dt>수집 시각</dt><dd>{stamp(catalog.live_fetched_at)}</dd></div>
 			{:else}
 				<div><dt>기준 시세</dt><dd>{catalog?.snapshot ?? '—'}</dd></div>
 			{/if}
@@ -360,13 +384,27 @@
 									oninput={(event) => setFilter('part_name', event.currentTarget.value)}
 								/>
 							{:else if key === 'price_max'}
+								<div class="preset-lead">
+									<button
+										type="button"
+										class="chip"
+										class:on={!filters.price_max && !filters.price_min}
+										onclick={() => {
+											filters.price_min = '';
+											setFilter('price_max', '');
+										}}
+									>전체</button>
+								</div>
 								<div class="money">
 									<input
 										type="number"
 										min="1"
 										step="10000"
 										value={filters.price_max}
-										oninput={(event) => setFilter('price_max', event.currentTarget.value)}
+										oninput={(event) => {
+											filters.price_min = '';
+											setFilter('price_max', event.currentTarget.value);
+										}}
 									/>
 									<span>원</span>
 								</div>
@@ -375,9 +413,24 @@
 										<button
 											type="button"
 											class="chip"
-											class:on={budget === preset}
-											onclick={() => setFilter('price_max', String(preset))}
+											class:on={budget === preset && !filters.price_min}
+											onclick={() => {
+												filters.price_min = '';
+												setFilter('price_max', String(preset));
+											}}
 										>{preset / 10_000}만</button>
+									{/each}
+									{#each FLOORS as floor (floor)}
+										<button
+											type="button"
+											class="chip"
+											class:on={filters.price_min === String(floor)}
+											onclick={() => {
+												filters.price_max = '';
+												filters.price_min = String(floor);
+												filters.offset = 0;
+											}}
+										>{floor / 10_000}만 이상</button>
 									{/each}
 								</div>
 							{:else}
@@ -462,7 +515,7 @@
 						class="chip"
 						class:on={filters.source === option.value}
 						aria-pressed={filters.source === option.value}
-						disabled={option.value === 'naver' && !catalog?.live_count}
+						disabled={(option.value === 'naver' || option.value === 'market') && !catalog?.live_count}
 						onclick={() => {
 							filters.source = option.value;
 							filters.offset = 0;
@@ -471,11 +524,26 @@
 				{/each}
 				<span class="quiet">
 					{#if catalog?.live_count}
-						네이버 쇼핑 검색 {won(catalog.live_count)}건 · {stamp(catalog.live_fetched_at)} 기준
+						판매 페이지가 있는 매물 {won(catalog.live_count)}건 · {stamp(catalog.live_fetched_at)} 기준
 					{:else}
-						실시간 매물은 아직 수집되지 않았습니다
+						판매 링크 매물은 아직 수집되지 않았습니다
 					{/if}
 				</span>
+			</div>
+
+			<div class="sources" role="group" aria-label="재고 상태">
+				{#each STOCK as option (option.value)}
+					<button
+						type="button"
+						class="chip"
+						class:on={filters.availability === option.value}
+						aria-pressed={filters.availability === option.value}
+						onclick={() => {
+							filters.availability = option.value;
+							filters.offset = 0;
+						}}
+					>{option.label}</button>
+				{/each}
 			</div>
 
 			{#if active.length}
@@ -508,6 +576,8 @@
 									<span class="closed">{closedLabel(item)}</span>
 								{:else if item.source === 'naver'}
 									<span class="live">실시간</span>
+								{:else if item.source === 'market'}
+									<span class="live">판매중</span>
 								{/if}
 								<span class="pill" class:used={item.condition === 'used'}>
 									{item.condition === 'used' ? '중고' : '신품'} · {item.grade}
@@ -517,7 +587,7 @@
 								<img class="thumb" src={item.image} alt="" loading="lazy" referrerpolicy="no-referrer" />
 							{/if}
 							<h3>{item.name}</h3>
-							<p class="card-meta">{item.brand} · {item.material} · {item.color}</p>
+							<p class="card-meta">{[item.brand, item.material, item.color].filter((part) => part && part !== '없음').join(' · ') || item.shop}</p>
 							<ul class="specs">
 								{#each specChips(item) as chip (chip)}<li>{chip}</li>{/each}
 							</ul>
@@ -526,7 +596,7 @@
 									<p class="price">{won(item.price)}<small>원</small></p>
 									<p class="shop">{item.shop}</p>
 									{#if offerable(item) && item.url}
-										<a class="proof" href={item.url} target="_blank" rel="noopener noreferrer">판매 페이지 증거 ↗</a>
+										<a class="proof" href={item.url} target="_blank" rel="noopener noreferrer">{linkLabel(item)} ↗</a>
 									{:else if stale(item)}
 										<p class="proof dead">추천에서 제외</p>
 										{#if item.url}

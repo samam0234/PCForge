@@ -419,6 +419,8 @@ a.hero-link:hover { color: #fff; }
 
 .field .presets { margin: 0.15rem 0 0; }
 
+.preset-lead { flex-basis: 100%; }
+
 .group.member { background: linear-gradient(180deg, rgba(245, 230, 223, 0.55), rgba(255, 253, 249, 0.6)); border-color: #ead3c8; }
 
 .group.member.locked { opacity: 0.85; }

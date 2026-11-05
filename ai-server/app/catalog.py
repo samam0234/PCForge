@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CATALOG_PATH = ROOT / "data" / "catalog" / "products.json"
 LIVE_PATH = ROOT / "data" / "catalog" / "live.json"
 MEMBER_ONLY = ("model", "material", "color", "noise")
-CLOSED = {"discontinued", "sold", "upcoming", "unverified"}
+CLOSED = {"discontinued", "sold", "stopped", "upcoming", "unverified"}
 SHORTLIST_CAP = {"guest": 30, "member": 120}
 
 _cache: dict | None = None
@@ -90,7 +90,7 @@ def offerable(item: dict) -> bool:
     availability = item.get("availability") or "reference"
     if availability in CLOSED:
         return False
-    if item.get("source") == "naver":
+    if item.get("source") in {"naver", "market"}:
         return availability == "selling" and bool(item.get("url"))
     return True
 

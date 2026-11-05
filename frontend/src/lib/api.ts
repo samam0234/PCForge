@@ -29,8 +29,8 @@ export interface CatalogItem {
 	specs: Record<string, string>;
 	url?: string;
 	image?: string;
-	source: 'naver' | 'reference';
-	availability?: 'selling' | 'discontinued' | 'sold' | 'upcoming' | 'unverified' | 'reference';
+	source: 'naver' | 'reference' | 'market';
+	availability?: 'selling' | 'discontinued' | 'sold' | 'stopped' | 'upcoming' | 'unverified' | 'reference';
 	fetched_at?: string;
 }
 
@@ -72,7 +72,9 @@ export interface CatalogFilters {
 	noise: string;
 	power: string;
 	grade: string;
-	source: '' | 'naver' | 'reference';
+	source: '' | 'naver' | 'reference' | 'market';
+	availability: '' | 'selling' | 'sold' | 'discontinued' | 'stopped';
+	price_min: string;
 	offset: number;
 }
 
@@ -186,13 +188,15 @@ export async function fetchCatalog(
 		'noise',
 		'power',
 		'grade',
-		'source'
+		'source',
+		'availability'
 	];
 	for (const key of textFields) {
 		const value = filters[key];
 		if (typeof value === 'string' && value) params.set(key, value);
 	}
 	if (!unlimited && filters.price_max) params.set('price_max', filters.price_max);
+	if (filters.price_min) params.set('price_min', filters.price_min);
 	if (filters.offset > 0) params.set('offset', String(filters.offset));
 	const response = await send(`/api/catalog?${params}`, { headers: authHeaders(token) });
 	if (!response.ok) throw new Error(await readError(response));
