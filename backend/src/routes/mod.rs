@@ -1,3 +1,4 @@
+mod assistant;
 mod auth;
 mod catalog;
 mod health;
@@ -16,6 +17,7 @@ pub fn router(state: AppState) -> Router {
         .route("/health", get(health::health))
         .route("/api/catalog", get(catalog::list_catalog))
         .route("/api/recommend", post(recommend::recommend))
+        .route("/api/chat", post(assistant::chat))
         .route("/api/sessions", get(sessions::list_sessions))
         .route("/api/auth/register", post(auth::register))
         .route("/api/auth/login", post(auth::login))
