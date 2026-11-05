@@ -12,6 +12,8 @@
 | 유형 | 미니 프로젝트 (Vibe Coding 대상 · 사심 + 실용) |
 | AI 핵심 | LangChain / LangGraph + RAG + 로컬 LLM (Ollama / LM Studio) + Streamlit MVP |
 
+이 문서는 초기 기획입니다. 지금 구현된 목록·인증·추천은 [아키텍처](../Architecture/pcforge_architecture.md)와 [카탈로그 가이드](../guidance/catalog.md)를 봅니다.
+
 ---
 
 ## 1. 프로젝트 개요

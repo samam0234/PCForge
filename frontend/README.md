@@ -6,14 +6,10 @@ PCForge의 사용자 인터페이스입니다. 폼, 결과 카드, 화면 상태
 
 | 기능 | 상태 |
 |------|------|
-| 요구사항 입력 폼 (용도, 예산, 신품/중고) | 🟡 |
-| 추천 결과 카드, 호환성 경고, 설명 표시 | 🟡 (목업 데이터) |
-| 로딩·오류 표시 | 🟡 |
-| 로그인 | ⬜ |
-| 비교 뷰, 기록 대시보드, 프리셋 | ⬜ |
-| 스타일링 | ⬜ (아직 적용 안 함) |
-
-표기: 🟡는 구현하고 타입 체크·빌드까지 통과했지만 브라우저에서 직접 눌러 확인하지 않았다는 뜻입니다. ⬜는 미구현입니다.
+| 목록, 예산, 재고, 담기 | 동작. 예산 전체와 판매완료 표시는 화면에서 확인 |
+| 추천 결과, 경고, 설명 | 동작. 메모를 넣은 추천 버튼은 다시 눌러 보지 않음 |
+| 로그인, 기록, 안내 글 | 동작 |
+| 스타일 | 목록·글 화면에 적용 |
 
 ## 실행
 
@@ -46,12 +42,19 @@ SvelteKit 3 방식으로 [src/env.ts](src/env.ts)에 정의하고, 코드에서�
 
 ```
 src/
-├── env.ts                       환경 변수 정의
+├── env.ts
 ├── lib/api.ts                   Axum 호출과 응답 타입
+├── lib/session.svelte.ts        로그인 상태
+├── lib/journal.ts               안내 글
 ├── components/
-│   ├── RequirementForm.svelte   입력 폼
+│   ├── CatalogDesk.svelte       목록, 필터, 담기
+│   ├── RequirementForm.svelte   추천 조건
 │   └── RecommendationCard.svelte 추천 카드
-└── routes/+page.svelte          화면 조립 (요청 상태 관리)
+└── routes/
+    ├── +page.svelte             목록과 추천
+    ├── login/                   가입·로그인
+    ├── history/                 내 기록
+    └── journal/                 안내 글
 ```
 
 - Svelte 5 룬 모드(`$state`, `$props`)를 사용합니다.

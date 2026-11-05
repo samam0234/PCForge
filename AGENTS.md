@@ -7,7 +7,9 @@
 - 아키텍처: [Docs/Architecture/pcforge_architecture.md](Docs/Architecture/pcforge_architecture.md)
 - 실행 방법과 문제 해결: [Docs/guidance/local-setup.md](Docs/guidance/local-setup.md)
 - API 형식: [Docs/guidance/api-reference.md](Docs/guidance/api-reference.md)
-- 검증 기록: [Docs/vaildates/skeleton-validation.md](Docs/vaildates/skeleton-validation.md)
+- 카탈로그와 수집 한계: [Docs/guidance/catalog.md](Docs/guidance/catalog.md)
+- 상담: [Docs/guidance/assistant.md](Docs/guidance/assistant.md)
+- 검증 기록: [Docs/vaildates/catalog-llm-validation.md](Docs/vaildates/catalog-llm-validation.md), [Docs/vaildates/assistant-validation.md](Docs/vaildates/assistant-validation.md)
 
 규칙의 원본은 인수인계 문서입니다. 에이전트별 파일(`.Claude/CLAUDE.md` 등)은 이 파일을 가리키기만 하며, 규칙을 중복해서 쓰지 않습니다.
 

@@ -15,27 +15,24 @@
 
 ## 현재 상태
 
-> **뼈대 단계입니다.** 세 서버와 DB가 연결되어 추천 요청이 끝까지 흐르지만, **추천 결과는 목업 데이터이고 실제 상품·가격이 아닙니다.**
+목록에서 판매 페이지가 있는 상품을 고르고, 용도·예산·회원 메모로 추천합니다. 판매완료·단종·판매중단은 목록에 흐리게 남고 담기와 추천에서는 빠집니다. 실시간 파일 `data/catalog/live.json`은 생성 파일이라 커밋하지 않습니다.
 
 | 기능 | 상태 |
 |------|------|
-| Axum → FastAPI 추천 요청 전달 | ✅ 동작 (curl로 확인) |
-| SvelteKit 화면 → Axum 호출 | 🟡 페이지 응답과 CORS 설정만 확인, 브라우저에서 눌러 보지 않음 |
-| LangGraph 7개 노드 실행 | ✅ 동작 (규칙 기반 임시 구현) |
-| 요구사항 입력 폼, 추천 결과 카드 | 🟡 구현됨 · 타입 체크와 빌드 통과, 브라우저 동작은 미확인 |
-| Streamlit MVP (노드별 진행 로그 + 결과) | 🟡 자동 테스트로 예외 없음만 확인, 실제 화면은 미확인 |
-| PostgreSQL 스키마 (5개 테이블) | ✅ 마이그레이션 작성 |
-| 사이트 검색 | 🟡 목업 데이터 |
-| 호환성 검증 | 🟡 "미구현" 경고만 출력 |
-| 로컬 LLM(Ollama) 연동 | ⬜ 미구현 |
-| RAG (벡터 스토어, 임베딩) | ⬜ 미구현 |
-| 로그인 / 회원가입 | ⬜ 미구현 (`501` 응답) |
-| 검색·추천 기록 저장과 조회 | ⬜ 미구현 (`501` 응답) |
-| 신품·중고 실제 사이트 검색 | ⬜ 미구현 |
+| 목록, 예산 전체, 재고 필터 | ✅ 화면에서 확인 |
+| 로그인, 추천 기록 | ✅ 연결됨 |
+| 카탈로그 추천, 호환 메모 | ✅ 동작 |
+| 회원 메모 → 우선순위 | ✅ Ollama가 소음 등으로 읽음. 화면 추천 버튼 경로는 미확인 |
+| LangGraph 8개 노드 | ✅ `NoteReader` 포함 |
+| Chroma RAG | ✅ 기동 시 인덱스 준비. 문서가 없으면 메모 없이 진행 |
+| 네이버 실시간 검색 | 🟡 키가 있을 때만. 없으면 기존 `live.json` 유지 |
+| 중고·다나와 실시간 매물 | ✅ 허용된 페이지만 |
+| Streamlit | 🟡 코드는 있으나 이번 검증에서 화면을 다시 보지 않음 |
+| 상담 (`/assistant`) | ✅ 도구 호출 대화. 범위는 [상담 가이드](Docs/guidance/assistant.md) |
 
-표기: ✅ 직접 실행해 확인 · 🟡 구현했지만 일부만 확인 · ⬜ 미구현
+표기: ✅ 확인함 · 🟡 조건이 있거나 일부만 확인 · ⬜ 미구현
 
-단계별 계획은 [로드맵](#로드맵)을 참고하세요.
+기준과 빠지는 경로는 [카탈로그 가이드](Docs/guidance/catalog.md)에 있습니다.
 
 ---
 
@@ -49,8 +46,8 @@
                             │                         │
                             ▼                         ▼
                      ┌─────────────┐          ┌──────────────┐
-                     │ PostgreSQL  │          │ Local LLM    │
-                     │ :5432       │          │ + RAG Store  │
+                     │ PostgreSQL  │          │ Ollama       │
+                     │             │          │ + Chroma     │
                      └─────────────┘          └──────────────┘
 ```
 
@@ -74,7 +71,7 @@ sequenceDiagram
     F->>A: POST /api/recommend
     A->>P: POST /agent/run
     P-->>A: 추천 목록 · 경고 · 설명 · 진행 단계
-    A-->>F: 응답 전달 (기록 저장은 예정)
+    A-->>F: 회원 추천은 기록 저장 후 응답
     F-->>U: 추천 카드 표시
 ```
 
@@ -82,19 +79,20 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    A[RequirementsAnalyzer] --> B[SearchPlanner] --> C[SiteSearcher] --> D[ResultNormalizer]
+    A[RequirementsAnalyzer] --> N[NoteReader] --> B[SearchPlanner] --> C[SiteSearcher] --> D[ResultNormalizer]
     D --> E[CompatibilityChecker] --> F[RankerAndRecommender] --> G[Explainer]
 ```
 
 | 노드 | 역할 | 현재 구현 |
 |------|------|-----------|
-| RequirementsAnalyzer | 입력 파싱·구조화 | 입력 확인만 |
-| SearchPlanner | 사이트별 검색 전략 | 신품·중고 조건에 따른 사이트 목록 |
-| SiteSearcher | 사이트 검색 도구 호출 | 목업 상품 반환 |
-| ResultNormalizer | 정규화, 중복 제거 | 사이트+상품명 기준 중복 제거 |
-| CompatibilityChecker | RAG + 룰 호환성 검증 | 미구현 경고 |
-| RankerAndRecommender | 점수화, 추천 | 예산 이하 상품을 가격 기준 정렬 |
-| Explainer | 설명, 트레이드오프 | 고정 문장 |
+| RequirementsAnalyzer | 입력 확인 | 등급·용도·예산·메모 길이를 단계에 기록 |
+| NoteReader | 회원 메모 해석 | Ollama가 가격·성능·소음·전력을 고름. 실패하면 단어 |
+| SearchPlanner | 후보 범위 | 담아 둔 목록 또는 카탈로그 조건 |
+| SiteSearcher | 후보 수집 | 판매 가능한 카탈로그 행 |
+| ResultNormalizer | 중복 제거 | id 또는 사이트+상품명 |
+| CompatibilityChecker | 호환 메모 | Chroma에서 근거 메모 |
+| RankerAndRecommender | 점수화, 추천 | 예산 안, 우선순위와 구성 순서 |
+| Explainer | 설명 | Ollama. 연결이 없으면 짧은 요약 |
 
 ---
 
@@ -129,7 +127,7 @@ PCForge/
 | Rust (cargo) | 1.98 | 백엔드 |
 | Python | 3.10 | AI 서버 |
 | Docker | 28.x | PostgreSQL |
-| Ollama | 0.40 | 로컬 LLM (Phase 1에서 사용 예정, 현재는 불필요) |
+| Ollama | 0.40 | 설명과 회원 메모. 없으면 요약으로 대체 |
 
 ### 1. 환경 변수
 
@@ -155,7 +153,7 @@ cp frontend/.env.example frontend/.env
 | `backend/.env` | `AI_SERVER_URL` | FastAPI 주소 | `http://localhost:8000` |
 | `backend/.env` | `FRONTEND_ORIGIN` | CORS 허용 출처 | `http://localhost:5173` |
 | `frontend/.env` | `PUBLIC_API_BASE_URL` | Axum 주소 | `http://localhost:3000` |
-| `ai-server/.env` | `OLLAMA_*`, `EMBEDDING_MODEL` | 아직 코드에서 읽지 않음 (Phase 1에서 연결) | - |
+| `ai-server/.env` | `OLLAMA_BASE_URL`, `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET` | 로컬 모델 주소, 네이버 검색 키. 키는 비어 있어도 서버는 뜸 | 로컬 Ollama, 키 없음 |
 
 ### 2. 데이터베이스
 
@@ -193,15 +191,17 @@ npm run dev
 ### 4. 동작 확인
 
 ```bash
-curl localhost:8000/health        # {"status":"ok"}
-curl localhost:3000/health        # {"database":"up","status":"ok"}
+curl localhost:8000/health
+curl localhost:3000/health
 
 curl -X POST localhost:3000/api/recommend \
   -H 'content-type: application/json' \
-  -d '{"purpose":"게이밍","budget_krw":250000,"condition":"used"}'
+  -d '{"purpose":"게이밍","budget_krw":2000000,"condition":"mixed"}'
 ```
 
-`/health`의 `database`가 `down`이면 DB가 꺼져 있거나 `DATABASE_URL`이 틀린 것입니다. 이때도 서버는 뜹니다.
+브라우저 주소는 `http://localhost:5173/` 입니다. `127.0.0.1:5173`으로는 개발 서버에 닿지 않을 수 있습니다.
+
+`/health`의 `database`가 `down`이면 DB가 꺼져 있거나 `DATABASE_URL`이 틀린 것입니다. 이때도 서버는 뜹니다. AI 서버 `/health`에는 Chroma, Ollama, 실시간 수집 상태가 함께 있습니다.
 
 ### Streamlit으로 AI 로직만 확인
 
@@ -218,16 +218,19 @@ cd ai-server
 
 자세한 요청·응답 예시는 [API 레퍼런스](Docs/guidance/api-reference.md)를 참고하세요.
 
-| 서버 | 메서드·경로 | 설명 | 상태 |
-|------|-------------|------|------|
-| Axum | `GET /health` | 서버·DB 상태 | ✅ |
-| Axum | `POST /api/recommend` | 요구사항을 AI 서버로 전달 | ✅ |
-| Axum | `GET /api/sessions` | 내 검색 기록 | `501` |
-| Axum | `POST /api/auth/login` | 로그인 | `501` |
-| FastAPI | `GET /health` | 서버 상태 | ✅ |
-| FastAPI | `POST /agent/run` | LangGraph 에이전트 실행 | ✅ |
+| 서버 | 메서드·경로 | 설명 |
+|------|-------------|------|
+| Axum | `GET /health` | 서버·DB 상태 |
+| Axum | `GET /api/catalog` | 기준 시세와 실시간 매물 |
+| Axum | `POST /api/recommend` | 조건을 정리한 뒤 AI 서버로 전달. 회원만 기록 |
+| Axum | `POST /api/auth/register` · `login` · `logout`, `GET /api/auth/me` | 가입과 로그인 |
+| Axum | `GET /api/sessions` | 내 추천 기록 |
+| FastAPI | `GET /health` | 서버, Chroma, Ollama, 수집 상태 |
+| FastAPI | `POST /agent/run` | LangGraph 실행 |
+| FastAPI | `POST /catalog/refresh` | 네이버 키가 있을 때 실시간 갱신 |
+| Axum | `POST /api/chat` | 상담 응답 스트림. 자세한 이벤트는 [상담 가이드](Docs/guidance/assistant.md) |
 
-오류 응답: 입력이 잘못되면 `422`, AI 서버에 닿지 못하면 `502`, 미구현 API는 `501`입니다.
+입력 오류는 `400`, AI 서버에 닿지 못하면 `502`, 인증 실패는 `401`입니다.
 
 ---
 
@@ -237,11 +240,12 @@ cd ai-server
 
 | 테이블 | 용도 |
 |--------|------|
-| `users` | 사용자, 선호도 |
-| `search_sessions` | 검색 요청과 요구사항 |
+| `users` | 사용자, 비밀번호 해시, 선호도 |
+| `auth_tokens` | 로그인 토큰 해시 |
+| `search_sessions` | 회원 추천 요청과 설명 |
 | `recommendations` | 세션별 추천 결과와 근거 |
-| `product_cache` | 사이트별 상품 캐시 |
-| `compatibility_rules` | 룰 기반 호환성 데이터 |
+| `product_cache` | 스키마만 있음 |
+| `compatibility_rules` | 스키마만 있음. 호환 메모는 Chroma |
 
 ---
 
@@ -249,12 +253,12 @@ cd ai-server
 
 | 단계 | 내용 | 진행 |
 |------|------|------|
-| Phase 1 · AI MVP | LangGraph 뼈대 ✅ · Ollama 연동 ⬜ · RAG ⬜ · Streamlit 데모 🟡 (목업, 화면 미확인) | 진행 중 |
-| Phase 2 · 메인 백엔드 | Axum 뼈대 ✅ · DB 스키마 ✅ · 인증 ⬜ · 기록 저장 ⬜ | 진행 중 |
-| Phase 3 · 프론트엔드 | 폼·결과 카드 🟡 · 로그인 ⬜ · 기록 대시보드 ⬜ · 비교 뷰 ⬜ | 진행 중 |
-| Phase 4 · 고도화 | 실제 사이트 검색 · RAG 데이터 보강 · 프롬프트 튜닝 · UI 개선 | 예정 |
+| Phase 1 · AI MVP | LangGraph, Ollama, Chroma, 카탈로그 검색 | 동작. Streamlit 화면은 재확인 전 |
+| Phase 2 · 메인 백엔드 | 인증, 목록 API, 추천 기록 | 동작 |
+| Phase 3 · 프론트엔드 | 목록, 로그인, 기록, 추천 화면 | 동작. 메모를 넣은 추천 버튼은 재확인 전 |
+| Phase 4 · 고도화 | 허용 범위 안의 재고 확인, 네이버 키, 설명 품질 | 진행 중 |
 
-성공 기준 체크리스트는 [검증 문서](Docs/vaildates/skeleton-validation.md)에서 관리합니다.
+성공 기준은 [인수인계 8장](Docs/plan/PCForge_인수인계.md)과 [검증 기록](Docs/vaildates/catalog-llm-validation.md)에 있습니다.
 
 ---
 
@@ -267,8 +271,10 @@ cd ai-server
 | [인수인계](Docs/plan/PCForge_인수인계.md) | 상세 규칙과 인수인계 원본 |
 | [아키텍처](Docs/Architecture/pcforge_architecture.md) | 계층, 흐름, 구현 현황 |
 | [로컬 환경 가이드](Docs/guidance/local-setup.md) | 설치·실행·문제 해결 |
-| [API 레퍼런스](Docs/guidance/api-reference.md) | 엔드포인트와 응답 예시 |
-| [검증 기록](Docs/vaildates/skeleton-validation.md) | 확인한 것과 확인하지 못한 것 |
+| [API 레퍼런스](Docs/guidance/api-reference.md) | 엔드포인트와 응답 |
+| [카탈로그 가이드](Docs/guidance/catalog.md) | 목록 파일, 재고, 수집 한계, 메모 해석 |
+| [검증 기록](Docs/vaildates/catalog-llm-validation.md) | 이번 기능에서 확인한 것과 남긴 것 |
+| [뼈대 검증](Docs/vaildates/skeleton-validation.md) | 초기 뼈대 확인 기록 |
 | [Docs 목차](Docs/README.md) | 문서 폴더별 용도와 위치 |
 | [커밋 기록](Docs/branchs/commits/) | 커밋·병합 기록 ([작성법](Docs/branchs/README.md)) |
 
@@ -287,9 +293,9 @@ cd ai-server
 
 ## 주의사항
 
-- **목업 데이터:** 현재 추천 결과의 상품명에는 `[목업]`이 붙어 있으며 실제 상품·가격이 아닙니다.
-- **중고 거래:** 사기나 상태 불일치 위험이 있으므로 실제 연동 시 추천에 주의 문구를 포함합니다.
-- **크롤링:** 사이트 연동 시 각 사이트의 이용약관과 robots 기준을 지키고, 요청량을 제한하며 캐시를 활용합니다. 초기에는 목업이나 공개 검색 결과로 시작합니다.
+- **판매 페이지:** 담기와 추천에 넣는 실시간 매물은 판매중이고 주소가 있어야 합니다. 판매가 끝난 상품은 목록에만 흐리게 남습니다.
+- **중고 거래:** 사기나 상태 불일치 위험이 있으므로 추천 설명과 별도로 판매 페이지를 확인합니다.
+- **수집:** 각 사이트의 이용약관과 robots 기준을 지킵니다. 막는 경로와 허용되지 않은 호스트는 요청하지 않습니다. 자세한 목록은 [카탈로그 가이드](Docs/guidance/catalog.md)에 있습니다.
 - **비밀 정보:** API 키, DB 연결 문자열, 비밀번호는 커밋하지 않습니다. ([SECURITY.md](SECURITY.md))
 
 ## 라이선스

@@ -94,5 +94,7 @@ Docs/branchs/commits/YYMMDD_HHMM_[id]_[이름]_[브랜치].md
 | [047](commits/261105_1320_047_while_feature-frontend.md) | `feature/frontend` | `feat(frontend): 상담 페이지와 응답 스트리밍 화면을 추가` |
 | [048](commits/261105_1320_048_while_feature-docs.md) | `feature/docs` | `docs(guidance): 상담 에이전트 가이드와 검증 기록을 추가` |
 | [049](commits/261105_1320_049_while_feature-docs.md) | `feature/docs` | `docs(branchs): 총 병합 기록 추가` (병합 기록) |
+| [050](commits/261105_1324_050_while_feature-docs-current.md) | `feature/docs-current` | `docs(guidance): 목록과 추천 문서를 현재 구현에 맞춘다` |
+| [051](commits/261105_1326_051_while_feature-docs-current.md) | `feature/docs-current` | `docs(branchs): 총 병합 기록 추가` (병합 기록) |
 
 새 기록을 만들 때 이 표에도 한 줄을 추가합니다.
