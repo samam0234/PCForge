@@ -29,6 +29,7 @@ CHROMA_DIR = ROOT / "ai-server" / "data" / "chroma"
 COLLECTION = "pcforge_knowledge"
 _lock = threading.Lock()
 _client = None
+_ready: tuple[float, str] | None = None
 
 
 def _client_or_new():
@@ -71,7 +72,12 @@ def _documents() -> list[dict]:
 
 
 def ensure_index() -> str:
+    """인덱스를 준비한다. 문서 파일이 그대로면 다시 임베딩하지 않는다."""
+    global _ready
     with _lock:
+        mtime = KNOWLEDGE_PATH.stat().st_mtime
+        if _ready and _ready[0] == mtime:
+            return _ready[1]
         docs = _documents()
         texts = [f"{doc['title']}\n{doc['text']}" for doc in docs]
         vectors, embedder = embed_texts(texts)
@@ -83,6 +89,7 @@ def ensure_index() -> str:
         if marker.exists() and marker.read_text(encoding="utf-8") == digest:
             try:
                 if client.get_collection(COLLECTION).count() == len(docs):
+                    _ready = (mtime, embedder)
                     return embedder
             except Exception:
                 logger.info("Chroma 컬렉션을 다시 만듭니다")
@@ -98,10 +105,12 @@ def ensure_index() -> str:
             metadatas=[{"title": doc["title"], "tags": doc.get("tags", "")} for doc in docs],
         )
         marker.write_text(digest, encoding="utf-8")
+        _ready = (mtime, embedder)
         return embedder
 
 
 def retrieve(query: str, k: int) -> tuple[list[dict[str, str]], str | None]:
+    global _ready
     try:
         embedder = ensure_index()
         vectors, query_embedder = embed_texts([query])
@@ -109,6 +118,7 @@ def retrieve(query: str, k: int) -> tuple[list[dict[str, str]], str | None]:
             marker = CHROMA_DIR / "source.sha256"
             if marker.exists():
                 marker.unlink()
+            _ready = None
             ensure_index()
             vectors, _ = embed_texts([query])
         collection = _client_or_new().get_collection(COLLECTION)

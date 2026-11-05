@@ -321,6 +321,12 @@ def rule_warnings(products: list[Product]) -> list[str]:
     return warnings
 
 
+def draft_build(req: Requirements) -> tuple[list[Product], list[str]]:
+    """언어 모델 없이 조건에 맞는 구성과 규칙 경고만 만든다. 상담 에이전트의 도구가 쓴다."""
+    picked = _assemble(gather(req), req)
+    return picked, rule_warnings(picked)
+
+
 def _reason(product: Product, req: Requirements, selected: set[str]) -> str:
     picked = "담아 둔 후보에서 예산 안으로 남긴 부품입니다. " if product.id in selected else ""
     condition = "중고" if product.is_used else "신품"

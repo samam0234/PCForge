@@ -54,3 +54,13 @@ class AgentResult(BaseModel):
     warnings: list[str]
     explanation: str
     steps: list[str]
+
+
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=4000)
+
+
+class ChatRequest(BaseModel):
+    messages: list[ChatMessage] = Field(min_length=1, max_length=20)
+    access_tier: Literal["guest", "member"] = "guest"
