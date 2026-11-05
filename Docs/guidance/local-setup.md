@@ -37,6 +37,19 @@ cp frontend/.env.example frontend/.env
 
 AI 서버와 백엔드는 서로 독립적으로 뜹니다. 추천 요청을 보낼 때 AI 서버가 꺼져 있으면 `502`가 반환됩니다.
 
+### 실시간 상품 수집 (네이버 쇼핑 검색 API)
+
+1. [네이버 개발자 센터](https://developers.naver.com/apps/#/register)에서 애플리케이션을 등록하고 사용 API로 **검색**을 고릅니다.
+2. 발급받은 값을 `ai-server/.env`의 `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`에 넣습니다. 이 값은 커밋하지 않습니다.
+3. AI 서버를 다시 띄우면 `data/catalog/live.json`이 없거나 `LIVE_REFRESH_HOURS`(기본 6시간)보다 오래됐을 때 백그라운드에서 다시 모읍니다.
+
+- 바로 모으기: `cd ai-server && .venv/Scripts/python -m app.ingest.naver` (`--limit 5`로 앞의 5개 모델만 시험)
+- 서버에 요청: `POST http://localhost:8000/catalog/refresh` (202, 이미 도는 중이면 `started: false`)
+- 상태 확인: `GET http://localhost:8000/health`의 `live`, `live_updated_at`, `live_last_error`
+- 한 번 갱신에 카탈로그 모델 수(약 126회)만큼 호출하며, 호출 사이에 0.15초를 쉽니다. 일일 한도는 25,000회입니다.
+- 백엔드와 AI 서버는 `products.json`(기준 시세)과 `live.json`(실시간)을 합쳐서 읽고, 파일이 바뀌면 다음 조회에 반영합니다. 수집 결과가 0건이면 이전 `live.json`을 유지합니다.
+- 판매 중인 매물만 판매 페이지 링크를 증거로 붙입니다. 단종(상품타입 7–9)은 연하게 보이고 담기와 추천에서 빠집니다. 이전 수집에 있던 판매 매물이 이번 전체 검색에 없으면 판매완료로 같은 취급을 합니다. `live.json`은 생성 파일이라 커밋하지 않습니다.
+
 ## 4. 종료와 초기화
 
 ```bash

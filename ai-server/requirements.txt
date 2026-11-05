@@ -5,3 +5,4 @@ python-dotenv==1.2.4
 langgraph==1.2.19
 streamlit==1.65.0
 httpx==0.28.1
+chromadb==1.0.21
