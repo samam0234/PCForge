@@ -4,14 +4,16 @@ from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 
 load_dotenv()
 
+from app.agents import assistant
 from app.agents.graph import graph
 from app.ingest import naver, scheduler
 from app.llm import ollama
 from app.rag import store
-from app.schemas import AgentResult, Requirements
+from app.schemas import AgentResult, ChatRequest, Requirements
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +41,7 @@ def health() -> dict:
     body = {"status": "ok", "chroma": store.status()}
     body.update(ollama.status())
     body.update(scheduler.status())
+    body["assistant_active"] = assistant.active_runs()
     return body
 
 
@@ -61,3 +64,14 @@ def run_agent(requirements: Requirements) -> dict:
         "explanation": state["explanation"],
         "steps": state["steps"],
     }
+
+
+@app.post("/agent/chat")
+def chat(request: ChatRequest) -> StreamingResponse:
+    if request.messages[-1].role != "user":
+        raise HTTPException(status_code=422, detail="마지막 메시지는 사용자 질문이어야 합니다")
+    messages = [message.model_dump() for message in request.messages]
+    return StreamingResponse(
+        assistant.stream_lines(messages, request.access_tier),
+        media_type="application/x-ndjson",
+    )
