@@ -1,9 +1,13 @@
 //! PCForge 메인 백엔드: API 게이트웨이, 인증, DB, AI 서버 호출 오케스트레이션.
 
+mod catalog;
 mod db;
 mod error;
+mod identity;
 mod routes;
 mod services;
+
+use std::{sync::Arc, time::Duration};
 
 use axum::http::{HeaderValue, Method, header};
 use sqlx::PgPool;
@@ -14,6 +18,7 @@ pub struct AppState {
     pub pool: PgPool,
     pub http: reqwest::Client,
     pub ai_server_url: String,
+    pub catalog: Arc<catalog::CatalogStore>,
 }
 
 fn env_or(key: &str, default: &str) -> String {
@@ -36,8 +41,12 @@ async fn main() {
 
     let state = AppState {
         pool: db::create_pool(&database_url).expect("DATABASE_URL 형식이 올바르지 않습니다"),
-        http: reqwest::Client::new(),
+        http: reqwest::Client::builder()
+            .timeout(Duration::from_secs(160))
+            .build()
+            .expect("HTTP 클라이언트를 만들지 못했습니다"),
         ai_server_url: env_or("AI_SERVER_URL", "http://localhost:8000"),
+        catalog: Arc::new(catalog::CatalogStore::open()),
     };
 
     let cors = CorsLayer::new()
