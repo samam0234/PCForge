@@ -1,9 +1,10 @@
 """PCForge LangGraph.
 
 카탈로그 JSON에서 후보를 고르고, Chroma 메모와 규칙으로 호환을 본 뒤
-Ollama가 그 목록만 가지고 설명을 쓴다.
+Ollama가 회원 메모를 우선순위로 읽고 그 목록만 가지고 설명을 쓴다.
 """
 
+import json
 from operator import add
 from typing import Annotated, TypedDict
 
@@ -45,12 +46,80 @@ class AgentState(TypedDict, total=False):
     steps: Annotated[list[str], add]
 
 
+NOTE_PRIORITIES = ("가격", "성능", "소음", "전력")
+
+
 def requirements_analyzer(state: AgentState) -> AgentState:
     req = state["requirements"]
     tier = "회원" if req.access_tier == "member" else "비로그인"
     note = f", 메모 {len(req.notes)}자" if req.notes else ""
     picked = f", 후보 {len(req.selected_ids)}개" if req.selected_ids else ""
     return {"steps": [f"RequirementsAnalyzer: {tier} / {req.purpose} / {req.budget_krw}원{picked}{note}"]}
+
+
+def _keyword_brief(note: str) -> list[str]:
+    found: list[str] = []
+    if any(word in note for word in ("소음", "조용", "무소음")):
+        found.append("소음")
+    if any(word in note for word in ("전력", "전기요금", "소비전력")):
+        found.append("전력")
+    if any(word in note for word in ("성능", "프레임", "고사양")):
+        found.append("성능")
+    if any(word in note for word in ("가격", "저렴", "가성비", "싸게")):
+        found.append("가격")
+    return found
+
+
+def _parse_brief(content: str) -> list[str] | None:
+    start = content.find("{")
+    end = content.rfind("}")
+    if start < 0 or end <= start:
+        return None
+    try:
+        data = json.loads(content[start : end + 1])
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(data, dict):
+        return None
+    raw = data.get("priorities")
+    if not isinstance(raw, list):
+        return None
+    return [item for item in raw if isinstance(item, str) and item in NOTE_PRIORITIES]
+
+
+def _llm_brief(note: str, priorities: list[str]) -> list[str] | None:
+    model = ollama.resolve_chat_model()
+    if not model:
+        return None
+    system = (
+        "회원 메모에서 고르기 기준만 JSON으로 뽑는다. "
+        '형식은 {"priorities":[]} 하나다. '
+        "priorities는 가격, 성능, 소음, 전력 중에서만 고르고, 메모에 없는 기준은 넣지 않는다. "
+        "다른 키와 문장은 쓰지 않는다."
+    )
+    user = f"이미 고른 우선순위: {', '.join(priorities) or '없음'}\n메모: {note}"
+    try:
+        content = ollama.chat(model, system, user, 60, 20)
+    except Exception:
+        return None
+    return _parse_brief(content)
+
+
+def note_reader(state: AgentState) -> AgentState:
+    req = state["requirements"]
+    note = req.notes.strip()
+    if req.access_tier != "member" or not note:
+        return {"steps": ["NoteReader: 메모 없음"]}
+    brief = _llm_brief(note, req.priorities)
+    source = "언어 모델"
+    if brief is None:
+        brief = _keyword_brief(note)
+        source = "단어"
+    merged = list(dict.fromkeys([*req.priorities, *brief]))
+    added = [item for item in brief if item not in req.priorities]
+    detail = ", ".join(added) if added else "추가 없음"
+    updated = req.model_copy(update={"priorities": merged})
+    return {"requirements": updated, "steps": [f"NoteReader: {source} / {detail}"]}
 
 
 def search_planner(state: AgentState) -> AgentState:
@@ -110,6 +179,10 @@ def _score(product: Product, req: Requirements, selected: set[str]) -> float:
         priority += 0.6
     if "성능" in req.priorities:
         priority += _perf(product) / 100
+    for word in ("화이트", "흰색", "블랙", "핑크"):
+        if word in req.notes and word in product.product_name:
+            priority += 0.45
+            break
     price_weight = 0.35 if "가격" in req.priorities or req.purpose == "사무" else 0.08
     return purpose_fit * 0.35 + selected_fit + (_perf(product) / 100) * 0.5 + priority * 0.3 + price_fit * price_weight
 
@@ -352,6 +425,7 @@ def explainer(state: AgentState) -> AgentState:
 
 NODES = [
     ("requirements_analyzer", requirements_analyzer),
+    ("note_reader", note_reader),
     ("search_planner", search_planner),
     ("site_searcher", site_searcher),
     ("result_normalizer", result_normalizer),

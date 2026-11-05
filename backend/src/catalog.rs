@@ -76,7 +76,10 @@ fn reference_availability() -> String {
 }
 
 fn closed(item: &CatalogItem) -> bool {
-    matches!(item.availability.as_str(), "discontinued" | "sold" | "upcoming" | "unverified")
+    matches!(
+        item.availability.as_str(),
+        "discontinued" | "sold" | "stopped" | "upcoming" | "unverified"
+    )
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -118,6 +121,8 @@ pub struct CatalogQuery {
     pub purpose: String,
     pub price_max: Option<i64>,
     #[serde(default)]
+    pub price_min: Option<i64>,
+    #[serde(default)]
     pub condition: String,
     #[serde(default)]
     pub category: String,
@@ -143,6 +148,8 @@ pub struct CatalogQuery {
     pub grade: String,
     #[serde(default)]
     pub source: String,
+    #[serde(default)]
+    pub availability: String,
     pub offset: Option<i64>,
 }
 
@@ -150,6 +157,7 @@ struct Criteria {
     part_name: String,
     purpose: String,
     price_max: Option<i64>,
+    price_min: Option<i64>,
     condition: String,
     category: String,
     brand: String,
@@ -163,6 +171,7 @@ struct Criteria {
     power: String,
     grade: String,
     source: String,
+    availability: String,
 }
 
 impl CatalogStore {
@@ -250,6 +259,21 @@ impl CatalogStore {
             "items": page,
         }))
     }
+
+    /// 카탈로그에 있고 판매가 끝나지 않은 id만 남긴다. 파일을 읽지 못하면 요청을 그대로 둔다.
+    pub fn selling_ids(&self, ids: &[String]) -> Vec<String> {
+        let Ok(data) = self.data() else {
+            return ids.to_vec();
+        };
+        let mut index = BTreeMap::new();
+        for item in &data.products {
+            index.entry(item.id.as_str()).or_insert(item);
+        }
+        ids.iter()
+            .filter(|id| index.get(id.as_str()).is_some_and(|item| !closed(item)))
+            .cloned()
+            .collect()
+    }
 }
 
 fn category_rank(category: &str) -> u8 {
@@ -276,6 +300,7 @@ fn criteria_from(query: &CatalogQuery, member: bool) -> Criteria {
         part_name: query.part_name.trim().to_lowercase(),
         purpose: query.purpose.trim().to_string(),
         price_max: query.price_max.filter(|price| *price > 0),
+        price_min: query.price_min.filter(|price| *price > 0),
         condition: blank_unless(&query.condition, &["new", "used"]),
         category: query.category.trim().to_string(),
         brand: query.brand.trim().to_string(),
@@ -288,7 +313,11 @@ fn criteria_from(query: &CatalogQuery, member: bool) -> Criteria {
         noise: if member { query.noise.trim().to_string() } else { String::new() },
         power: query.power.trim().to_string(),
         grade: query.grade.trim().to_string(),
-        source: blank_unless(&query.source, &["naver", "reference"]),
+        source: blank_unless(&query.source, &["naver", "reference", "market"]),
+        availability: blank_unless(
+            &query.availability,
+            &["selling", "sold", "discontinued", "stopped", "upcoming", "unverified"],
+        ),
     }
 }
 
@@ -311,6 +340,11 @@ fn matches(item: &CatalogItem, criteria: &Criteria, skip: Option<&str>) -> bool 
                 return false;
             }
         }
+        if let Some(min) = criteria.price_min {
+            if item.price < min {
+                return false;
+            }
+        }
     }
     eq(skip, "condition", &criteria.condition, &item.condition)
         && eq(skip, "category", &criteria.category, &item.category)
@@ -325,6 +359,7 @@ fn matches(item: &CatalogItem, criteria: &Criteria, skip: Option<&str>) -> bool 
         && eq(skip, "power", &criteria.power, &item.power)
         && eq(skip, "grade", &criteria.grade, &item.grade)
         && eq(skip, "source", &criteria.source, &item.source)
+        && eq(skip, "availability", &criteria.availability, &item.availability)
 }
 
 fn eq(skip: Option<&str>, field: &str, expected: &str, actual: &str) -> bool {

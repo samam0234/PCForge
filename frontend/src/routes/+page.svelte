@@ -130,7 +130,7 @@
 									<span class="eyebrow">{item.category}</span>
 									{#if item.url}
 										<a class="product-link" href={item.url} target="_blank" rel="noopener noreferrer"><strong>{item.product_name}</strong></a>
-										<a class="proof" href={item.url} target="_blank" rel="noopener noreferrer">판매 페이지 증거 ↗</a>
+										<a class="proof" href={item.url} target="_blank" rel="noopener noreferrer">원본 링크 ↗</a>
 									{:else}
 										<strong>{item.product_name}</strong>
 									{/if}

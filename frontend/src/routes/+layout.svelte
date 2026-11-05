@@ -22,7 +22,7 @@
 	<div class="ticker">
 		<div class="wrap">
 			<span>VOL. 01 · 2026년 11월호</span>
-			<span class="hide-sm">쇼핑몰 9곳 · 신품과 중고 · 2026-11-01 기준 시세</span>
+			<span class="hide-sm">신품과 중고 · 판매 페이지 링크</span>
 			<span>
 				{#if !session.ready}확인 중{:else if session.user}{session.user.name} 님의 회원 지면{:else}비로그인 열람{/if}
 			</span>
@@ -70,7 +70,7 @@
 			</div>
 			<div>
 				<p class="eyebrow light">가격에 대하여</p>
-				<p>'실시간' 표시가 붙은 매물은 네이버 쇼핑 검색에서 주기적으로 가져온 최저가이고, 나머지는 2026-11-01 기준 시세입니다. 쿠폰과 배송비는 판매처에서 확인하세요.</p>
+				<p>'판매중'은 판매 페이지에서 재고를 확인한 매물입니다. 단종, 판매중단, 판매완료로 확인되면 흐리게 빼고 추천에도 넣지 않습니다. '실시간'은 네이버 쇼핑 검색이고, 그 밖의 가격은 2026-11-01 기준 시세입니다. 1,000만 원 넘는 매물은 예산의 '전체'나 '1000만 이상'으로 봅니다. 쿠폰과 배송비는 판매처에서 확인하세요.</p>
 			</div>
 			<div>
 				<p class="eyebrow light">추천에 대하여</p>

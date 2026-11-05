@@ -13,6 +13,9 @@ __pycache__/
 .chroma/
 ai-server/data/chroma/
 data/catalog/live.json
+data/catalog/link-cache.json
+ai-server/scripts/_probe/*.json
+ai-server/scripts/_probe/*.txt
 
 # Node (세부 항목은 frontend/.gitignore)
 node_modules/
