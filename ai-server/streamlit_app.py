@@ -16,7 +16,7 @@ CONDITIONS = {"mixed": "신품 + 중고", "new": "신품만", "used": "중고만
 
 st.set_page_config(page_title="PCForge MVP")
 st.title("PCForge 에이전트 MVP")
-st.caption("현재 결과는 목업 데이터입니다. 실제 상품과 가격이 아닙니다.")
+st.caption("카탈로그 기준 시세와 로컬 Ollama, Chroma 메모를 사용합니다. 결제 화면의 실시간 가격이 아닙니다.")
 
 purpose = st.selectbox("용도", list(PRESETS))
 budget = st.number_input("예산 (원)", min_value=1, value=PRESETS[purpose], step=100000)
