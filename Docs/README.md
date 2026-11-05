@@ -8,10 +8,10 @@ PCForge의 모든 문서는 이 폴더 아래 용도별 하위 폴더에 둡니�
 | [Architecture/](Architecture/) | 시스템·계층·데이터 흐름 아키텍처 | [pcforge_architecture.md](Architecture/pcforge_architecture.md) |
 | [branchs/](branchs/) | 브랜치·커밋 기록 (**템플릿 필수**, **commits/ 하위 폴더 필수**) | [커밋 기록](branchs/commits/), [작성법](branchs/README.md) |
 | [find_debug/](find_debug/) | 작업·실행 디버깅 일일 기록 | 없음 |
-| [guidance/](guidance/) | 기능·실행 가이드 | [local-setup.md](guidance/local-setup.md), [api-reference.md](guidance/api-reference.md) |
+| [guidance/](guidance/) | 기능·실행 가이드 | [local-setup.md](guidance/local-setup.md), [api-reference.md](guidance/api-reference.md), [catalog.md](guidance/catalog.md) |
 | [trainings/](trainings/) | 학습·연구 정리 | 없음 |
 | [repeater/](repeater/) | 서버 연결·인프라 장애와 해결 | 없음 |
-| [vaildates/](vaildates/) | 검증·체크리스트 | [skeleton-validation.md](vaildates/skeleton-validation.md) |
+| [vaildates/](vaildates/) | 검증·체크리스트 | [skeleton-validation.md](vaildates/skeleton-validation.md), [catalog-llm-validation.md](vaildates/catalog-llm-validation.md) |
 | [web_management/](web_management/) | 배포 전·배포 시 웹 관리 기록 | 없음 |
 
 폴더 이름의 `branchs`, `vaildates`는 인수인계 문서에 적힌 그대로 쓰는 것이며 오타가 아닙니다.

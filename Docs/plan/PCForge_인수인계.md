@@ -102,12 +102,13 @@
 
 ### LangGraph 에이전트 노드
 1. RequirementsAnalyzer: 사용자 입력 파싱·구조화
-2. SearchPlanner: 사이트별 검색 전략 수립
-3. SiteSearcher: 사이트 검색 도구 호출
-4. ResultNormalizer: 결과 정규화·중복 제거·스펙 추출
-5. CompatibilityChecker: RAG + 룰 기반 호환성 검증
-6. RankerAndRecommender: 점수화 후 최종 추천 + 근거
-7. Explainer: 친화적 설명 및 트레이드오프
+2. NoteReader: 회원 메모를 가격·성능·소음·전력으로 읽기
+3. SearchPlanner: 사이트별 검색 전략 수립
+4. SiteSearcher: 카탈로그에서 판매 가능한 후보를 가져오기
+5. ResultNormalizer: 결과 정규화·중복 제거·스펙 추출
+6. CompatibilityChecker: RAG + 룰 기반 호환성 검증
+7. RankerAndRecommender: 점수화 후 최종 추천 + 근거
+8. Explainer: 친화적 설명 및 트레이드오프
 
 ---
 
@@ -190,8 +191,9 @@ pcforge/
 - CompatibilityRules: 룰 기반 호환성 데이터
 
 ### 주요 API (예시)
-- Axum: POST `/api/recommend`, GET `/api/sessions`, POST `/api/auth/login` 등
-- FastAPI: POST `/agent/run`, GET `/health`, Streamlit 별도
+- Axum: GET `/api/catalog`, POST `/api/recommend`, GET `/api/sessions`, POST `/api/auth/register`, POST `/api/auth/login`, POST `/api/auth/logout`, GET `/api/auth/me`
+- FastAPI: POST `/agent/run`, GET `/health`, POST `/catalog/refresh`, Streamlit 별도
+- 필드와 등급 차이는 `Docs/guidance/api-reference.md`
 
 ---
 
@@ -286,28 +288,31 @@ pcforge/
 - 에이전트 프롬프트 및 그래프 튜닝
 - UI/UX 개선, 프리셋, 에러 처리
 
+1–4단계는 처음 잡을 때의 순서입니다. 지금 어디까지 됐는지는 8장과 9장을 봅니다.
+
 ---
 
 ## 8. 성공 기준
 
-- [ ] 요구사항 입력 시 합리적인 맞춤 추천 목록이 생성됨 (호환성 경고 포함)
-- [ ] Streamlit에서 에이전트 중간 과정과 최종 결과가 보임
-- [ ] 로그인 후 개인 검색·추천 기록 조회 가능
-- [ ] 전체 스택 (SvelteKit → Axum → FastAPI → PostgreSQL + 로컬 LLM) 동작
-- [ ] LangGraph 멀티스텝 워크플로우가 실제로 실행됨
-- [ ] Vibe Coding으로 빠르게 반복 가능한 구조
-- [ ] 기본 신품/중고 믹스 추천 및 설명 가능
+- [x] 요구사항 입력 시 카탈로그 기준 추천과 호환 경고가 생성됨
+- [ ] Streamlit에서 에이전트 중간 과정과 최종 결과가 보임 (화면 재확인은 없음)
+- [x] 로그인 후 개인 검색·추천 기록 조회 가능
+- [x] 전체 스택 (SvelteKit → Axum → FastAPI → PostgreSQL + 로컬 LLM) 동작. Ollama가 없으면 설명만 짧은 요약으로 대체
+- [x] LangGraph 멀티스텝 워크플로우가 실제로 실행됨
+- [x] Vibe Coding으로 빠르게 반복 가능한 구조
+- [x] 기본 신품/중고 믹스 추천 및 설명 가능
+
+확인 범위와 아직 보지 않은 항목은 `Docs/vaildates/catalog-llm-validation.md`에 있습니다.
 
 ---
 
 ## 9. 다음 단계
 
-1. FastAPI + Streamlit으로 LangGraph 에이전트 프로토타입 먼저 만들기
-2. Ollama에 한국어/Tool Calling 성능 좋은 모델 설치 및 도구 호출 테스트
-3. Axum 기본 프로젝트 + PostgreSQL 스키마 구성
-4. SvelteKit 프론트 스켈레톤 구성
-5. 사이트 검색 도구는 초기에는 목업 또는 제한적 웹 검색으로 시작 후 점진 개선
-6. RAG 문서 수집 (호환성 가이드 등) 및 임베딩 파이프라인 구축
+1. `main` 병합과 그 이후 배포는 사용자 지시 후에만 진행
+2. 네이버 Open API 키가 없으면 신품 실시간 검색은 건너뛰고, 기존 `live.json`은 유지
+3. 번개장터·11번가·쿠팡처럼 수집이 허용되지 않은 호스트는 계속 제외
+4. 허용된 다나와 목록 첫 페이지에 단종 상품이 없으면 단종 행은 생기지 않음
+5. 재확인하지 않은 중고나라 주소가 남아 있음. 다시 읽을 때는 간격을 두고 허용된 페이지만 요청
 
 **PCForge**로 나에게 필요한 컴퓨터 장비 추천 에이전트를 빠르게 만들어 보세요!
 

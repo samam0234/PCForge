@@ -10,92 +10,94 @@
                             │                         │
                             ▼                         ▼
                      ┌─────────────┐          ┌──────────────┐
-                     │ PostgreSQL  │          │ Local LLM    │
-                     │ :5432       │          │ + RAG Store  │
+                     │ PostgreSQL  │          │ Ollama       │
+                     │             │          │ + Chroma     │
                      └─────────────┘          └──────────────┘
 ```
 
+PostgreSQL 호스트 포트는 루트 `.env`의 `POSTGRES_PORT`이고 기본은 `5432`입니다. 카탈로그 JSON은 DB에 두지 않고 `data/catalog/`에서 읽습니다.
+
 | 계층 | 맡는 일 | 맡지 않는 일 |
 |------|---------|--------------|
-| SvelteKit | UI와 화면 상태 | DB 접근, AI 서버 직접 호출 |
-| Axum | 인증, DB, AI 서버 호출, 캐시, 에러 처리 | 에이전트·LLM 로직 |
-| FastAPI | LangGraph, RAG, 로컬 LLM, 검색 도구 | 사용자 인증, 기록 저장 |
+| SvelteKit | 목록, 필터, 담기, 추천 화면, 로그인, 기록 | DB 접근, AI 서버 직접 호출 |
+| Axum | 인증, 등급 결정, 카탈로그 조회, 추천 요청 정리, 기록 저장 | 에이전트·LLM 로직 |
+| FastAPI | LangGraph, 카탈로그 검색, RAG, Ollama, 실시간 수집 | 사용자 인증, 기록 저장 |
 
 ## 추천 요청 흐름
 
-1. SvelteKit이 요구사항을 `POST /api/recommend`로 Axum에 보냅니다.
-2. Axum이 `POST /agent/run`으로 FastAPI를 호출합니다.
-3. FastAPI가 LangGraph 그래프를 실행해 추천 결과를 돌려줍니다.
-4. Axum이 결과를 PostgreSQL에 저장한 뒤 응답합니다. (저장은 Phase 2 예정, 현재는 응답만 전달)
+1. SvelteKit이 `POST /api/recommend`로 Axum에 보냅니다. 로그인한 경우 토큰을 붙입니다.
+2. Axum이 용도·예산·등급·메모·담아 둔 id를 정리합니다. 판매가 끝난 id는 여기서 뺍니다.
+3. Axum이 `POST /agent/run`으로 FastAPI를 호출합니다.
+4. FastAPI가 그래프를 실행합니다. 회원 메모는 `NoteReader`가 우선순위로 읽고, 설명은 Ollama가 작성합니다. 모델이 없으면 단어 추출과 짧은 요약으로 넘어갑니다.
+5. 회원 요청이면 Axum이 세션과 추천을 저장하고 `session_id`를 붙여 응답합니다.
 
-요청·응답 형식은 [API 레퍼런스](../guidance/api-reference.md)를 참고하세요.
+요청·응답 형식은 [API 레퍼런스](../guidance/api-reference.md), 목록 파일과 수집 한계는 [카탈로그 가이드](../guidance/catalog.md)에 있습니다.
 
 ## 코드 위치
 
 | 영역 | 위치 | 설명 |
 |------|------|------|
-| 프론트 화면 | `frontend/src/routes/+page.svelte` | 폼·결과 화면 조립 |
-| 프론트 컴포넌트 | `frontend/src/components/` | 입력 폼, 추천 카드 |
-| 프론트 API 호출 | `frontend/src/lib/api.ts` | Axum 호출과 응답 타입 |
-| 프론트 환경 변수 | `frontend/src/env.ts` | `PUBLIC_API_BASE_URL` |
-| 백엔드 라우트 | `backend/src/routes/` | health, recommend, sessions, auth |
-| 백엔드 AI 호출 | `backend/src/services/ai_client.rs` | FastAPI 호출, 오류 변환 |
-| 백엔드 오류 | `backend/src/error.rs` | 상태 코드 매핑 |
-| 백엔드 DB | `backend/src/db/`, `backend/migrations/` | 연결 풀, 스키마 |
-| 에이전트 그래프 | `ai-server/app/agents/graph.py` | 7개 노드와 흐름 |
-| 검색 도구 | `ai-server/app/tools/site_search.py` | 목업 상품 |
-| RAG | `ai-server/app/rag/retriever.py` | 자리만 있음 (빈 결과) |
-| 스키마 | `ai-server/app/schemas.py` | 요청·응답 모델 |
+| 첫 화면 | `frontend/src/routes/+page.svelte` | 목록과 추천 |
+| 로그인 | `frontend/src/routes/login/` | 가입·로그인 |
+| 기록 | `frontend/src/routes/history/` | 내 추천 |
+| 안내 글 | `frontend/src/routes/journal/` | 사용 설명 |
+| 목록 화면 | `frontend/src/components/CatalogDesk.svelte` | 필터, 예산, 재고, 담기 |
+| 프론트 API | `frontend/src/lib/api.ts` | Axum 호출 |
+| 백엔드 라우트 | `backend/src/routes/` | health, catalog, recommend, sessions, auth |
+| 카탈로그 조회 | `backend/src/catalog.rs` | 기준 시세와 실시간 파일을 합쳐 거름 |
+| 에이전트 | `ai-server/app/agents/graph.py` | 8개 노드 |
+| 카탈로그 검색 | `ai-server/app/catalog.py` | 추천 후보 |
+| 로컬 모델 | `ai-server/app/llm/ollama.py` | 채팅·임베딩. 실패하면 호출부가 대체 |
+| RAG | `ai-server/app/rag/` | Chroma. 문서가 없으면 빈 메모 |
+| 실시간 수집 | `ai-server/app/ingest/` | 네이버 Open API와 주기 |
+| 수집 스크립트 | `ai-server/scripts/` | 기준 시세, 실시간 매물, 재고 재확인 |
 
 ## LangGraph 노드
 
-`ai-server/app/agents/graph.py`에서 아래 순서로 실행됩니다. 상태에 `steps`를 누적해 단계 로그를 응답에 담습니다.
-
 ```
-RequirementsAnalyzer → SearchPlanner → SiteSearcher → ResultNormalizer
-  → CompatibilityChecker → RankerAndRecommender → Explainer
+RequirementsAnalyzer → NoteReader → SearchPlanner → SiteSearcher
+  → ResultNormalizer → CompatibilityChecker → RankerAndRecommender → Explainer
 ```
 
-| 노드 | 현재 동작 | 교체 예정 |
-|------|-----------|-----------|
-| RequirementsAnalyzer | 입력 확인 | LLM으로 자유 입력(`notes`) 구조화 |
-| SearchPlanner | `condition`에 따라 신품·중고 사이트 목록 선택 | 사이트별 키워드 확장 |
-| SiteSearcher | 목업 상품 반환 | 공개 검색, 사이트 API, Playwright |
-| ResultNormalizer | 사이트+상품명 중복 제거 | 스펙 추출, 가격 정리 |
-| CompatibilityChecker | 미구현 경고 | 룰 + RAG 호환성 검증 |
-| RankerAndRecommender | 예산 이하만 남기고 `1 - 가격/예산`으로 정렬 | 용도·우선순위 반영 점수 |
-| Explainer | 고정 문장 | LLM 설명, 신품·중고 믹스 제안 |
+| 노드 | 현재 동작 |
+|------|-----------|
+| RequirementsAnalyzer | 등급, 용도, 예산, 담아 둔 수, 메모 길이를 단계 로그에 남김 |
+| NoteReader | 회원 메모를 Ollama로 읽어 가격·성능·소음·전력을 보탬. 실패하면 메모 속 단어 |
+| SearchPlanner | 담아 둔 id가 있으면 그 목록을, 없으면 조건으로 카탈로그를 거름 |
+| SiteSearcher | `gather()`로 판매 가능한 카탈로그 행을 가져옴 |
+| ResultNormalizer | id 또는 사이트+상품명으로 중복 제거 |
+| CompatibilityChecker | Chroma에서 호환 메모를 찾아 경고에 제목을 붙임 |
+| RankerAndRecommender | 예산 안에서 점수화하고 구성 순서로 추천 |
+| Explainer | Ollama로 설명. 연결이 없으면 짧은 요약 |
 
-## 데이터 모델
+## 데이터
 
-`backend/migrations/0001_init.sql` 기준입니다.
+### PostgreSQL
 
-| 테이블 | 주요 컬럼 | 비고 |
-|--------|-----------|------|
-| `users` | id, email(unique), name, preferences_json | 비밀번호 컬럼 없음 (인증 방식 미정) |
-| `search_sessions` | id, user_id → users, requirements_json, status | 사용자 삭제 시 함께 삭제 |
-| `recommendations` | id, session_id → search_sessions, product_name, price, site, url, reason, specs_json, is_used, score | 세션 삭제 시 함께 삭제 |
-| `product_cache` | id, site, external_id, title, price, specs | (site, external_id) 유일 |
-| `compatibility_rules` | id, category, rule_json, description | 룰 기반 호환성 데이터 |
+| 테이블 | 내용 |
+|--------|------|
+| `users` | 이메일, 이름, `password_hash`, 선호도 |
+| `auth_tokens` | 토큰 해시, 만료 14일 |
+| `search_sessions` | 회원 추천 요청. 설명은 `requirements_json._explanation` |
+| `recommendations` | 세션별 추천 상품 |
+| `product_cache` | 스키마만 있고 현재 수집 경로에서는 쓰지 않음 |
+| `compatibility_rules` | 스키마만 있음. 호환 메모는 Chroma와 규칙 함수가 담당 |
 
-`id`는 UUID(`gen_random_uuid()`)이고, `RagDocuments` 테이블은 기획서에서 선택 항목이라 만들지 않았습니다.
+스키마는 `backend/migrations/0001_init.sql`과 `0002_auth.sql`입니다.
+
+### 카탈로그 파일
+
+기준 시세는 `products.json`, 판매 페이지가 있는 매물은 `live.json`입니다. `live.json`은 생성 파일이라 커밋하지 않습니다.
 
 ## 구현 현황
 
 | 항목 | 상태 |
 |------|------|
-| 계층 간 추천 요청 전달 | 동작 |
-| LangGraph 7개 노드 흐름 | 동작 (규칙 기반 임시 구현) |
-| 사이트 검색 | 목업 |
-| 로컬 LLM, RAG, 호환성 검증 | 미구현 |
-| 로그인, 세션 조회 (`/api/auth/login`, `/api/sessions`) | 미구현 (501 응답) |
-| DB 스키마 | 작성·적용 확인 |
-| 추천 기록 저장 | 미구현 |
+| 목록, 예산 전체, 재고 상태 필터 | 동작. 화면에서 확인 |
+| 로그인, 추천 기록 | 동작 |
+| 카탈로그 기반 추천과 호환 경고 | 동작 |
+| 회원 메모의 우선순위 해석 | Ollama로 확인. 화면 추천 버튼 경로는 별도 기록 |
+| 실시간 매물 | 중고나라·당근·다나와 허용 페이지. 네이버는 키가 있을 때만 |
+| 목업 검색 도구 | `site_search.py`에 남아 있으나 그래프의 검색 노드는 카탈로그를 사용 |
 
-검증 내용은 [뼈대 검증 기록](../vaildates/skeleton-validation.md)에 있습니다.
-
-## 미정 사항
-
-- 로컬 LLM 모델: 인수인계 문서와 기획서 모두 한국어 + Tool Calling 후보로 `Qwen2.5`(7B/14B/32B), `Llama 3.1/3.2 Instruct`를 두고, 경량 후보로 `Llama 3.2 3B`, `Gemma 2 9B`, `Phi-3.5`를 둡니다. 어느 모델·크기를 쓸지는 Phase 1에서 설치해 보고 정합니다.
-- 인증 방식: JWT와 세션 중 선택, 비밀번호 저장 컬럼 추가 여부.
-- 벡터 스토어: 개발은 Chroma, 이후 FAISS 또는 pgvector.
+확인 범위는 [카탈로그·메모 해석 검증](../vaildates/catalog-llm-validation.md)에 있습니다.

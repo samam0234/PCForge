@@ -6,10 +6,11 @@ PCForge의 메인 백엔드입니다. API 게이트웨이, 인증, DB, AI 서버
 
 | 엔드포인트 | 상태 |
 |------------|------|
-| `GET /health` | ✅ 서버·DB 상태 |
-| `POST /api/recommend` | ✅ AI 서버로 전달 (인증·기록 저장 없음) |
-| `GET /api/sessions` | `501` (Phase 2) |
-| `POST /api/auth/login` | `501` (Phase 2) |
+| `GET /health` | 서버·DB 상태 |
+| `GET /api/catalog` | 기준 시세와 실시간 매물 |
+| `POST /api/recommend` | 조건 정리 후 AI 서버로 전달. 회원만 기록 |
+| `GET /api/sessions` | 로그인 사용자의 최근 기록 |
+| `POST /api/auth/register` · `login` · `logout`, `GET /api/auth/me` | 가입과 로그인 |
 
 요청·응답 형식은 [API 레퍼런스](../Docs/guidance/api-reference.md)에 있습니다.
 
@@ -42,16 +43,17 @@ src/
 ├── main.rs              설정 읽기, 상태 구성, CORS, 서버 시작
 ├── error.rs             AppError → HTTP 상태 코드
 ├── db/mod.rs            지연 연결 풀 (DB가 꺼져 있어도 서버는 뜸)
-├── routes/              health, recommend, sessions, auth
+├── routes/              health, catalog, recommend, sessions, auth
+├── catalog.rs           카탈로그 파일 조회와 판매 가능 id
 └── services/ai_client.rs  FastAPI 호출
-migrations/0001_init.sql   초기 스키마
+migrations/              0001_init.sql, 0002_auth.sql
 ```
 
 ## 동작 규칙
 
-- **오류 매핑:** AI 서버가 4xx면 상태 코드와 본문을 그대로 전달하고, 연결 실패나 5xx면 `502`로 응답합니다.
+- **오류 매핑:** 추천 조건이 비었으면 `400`이고 본문은 `{"error":"..."}`입니다. AI 서버가 4xx면 상태 코드와 본문을 그대로 전달하고, 연결 실패나 5xx면 `502`입니다.
 - **DB 연결:** 풀은 첫 쿼리 때 연결합니다. 획득 제한 시간은 2초입니다.
-- **미구현 라우트:** 라우트는 등록되어 있고 `501`을 반환합니다. 구현할 때 `TODO(Phase 2)` 주석 위치에서 시작합니다.
+- **등급:** 회원 여부는 토큰으로만 정합니다. 비로그인 메모와 회원 전용 필터는 AI 서버로 보내기 전에 제거합니다.
 
 ## 개발
 

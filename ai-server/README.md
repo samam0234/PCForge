@@ -1,8 +1,8 @@
 # ai-server (FastAPI + LangGraph)
 
-PCForge의 AI 서버입니다. LangGraph 에이전트, RAG, 로컬 LLM, 검색 도구를 맡고, **인증과 기록 저장은 맡지 않습니다.** 전체 구조는 [루트 README](../README.md)를 참고하세요.
+PCForge의 AI 서버입니다. LangGraph 에이전트, 카탈로그 검색, RAG, 로컬 LLM을 맡고, **인증과 기록 저장은 맡지 않습니다.** 전체 구조는 [루트 README](../README.md)를 참고하세요.
 
-> **현재 모든 노드는 규칙 기반 임시 구현이고, 검색 결과는 목업입니다.** LLM(Ollama)과 RAG는 아직 연결되지 않았습니다.
+추천 후보는 `data/catalog/`의 기준 시세와 실시간 매물입니다. Ollama가 없으면 설명은 짧은 요약이고, 회원 메모는 단어로 우선순위를 고릅니다.
 
 ## 실행
 
@@ -16,15 +16,17 @@ cp .env.example .env
 ```
 
 - API 문서(Swagger UI): <http://localhost:8000/docs>
-- 포트는 `--port`로 정합니다. `.env`의 `AI_SERVER_PORT`는 코드에서 읽지 않습니다.
-- `OLLAMA_*`, `EMBEDDING_MODEL`도 아직 읽지 않으며 Phase 1에서 연결합니다.
+- 포트는 `--port`로 정합니다.
+- `OLLAMA_BASE_URL`의 기본은 `http://localhost:11434`입니다.
+- 네이버 키가 없으면 `POST /catalog/refresh`는 `503`이고, 기존 `live.json`은 유지됩니다.
 
 ## 엔드포인트
 
 | 경로 | 설명 |
 |------|------|
-| `GET /health` | `{"status":"ok"}` |
-| `POST /agent/run` | 요구사항을 받아 에이전트를 실행하고 추천 결과를 반환 |
+| `GET /health` | 서버, Chroma, Ollama, 실시간 수집 상태 |
+| `POST /agent/run` | 그래프를 실행하고 추천을 반환 |
+| `POST /catalog/refresh` | 네이버 키가 있을 때 백그라운드 갱신 |
 
 요청·응답 예시는 [API 레퍼런스](../Docs/guidance/api-reference.md)에 있습니다.
 
@@ -32,34 +34,28 @@ cp .env.example .env
 
 ```
 app/
-├── main.py              FastAPI 앱, /health, /agent/run
+├── main.py              FastAPI 앱
 ├── schemas.py           Requirements, Product, Recommendation, AgentResult
-├── agents/graph.py      LangGraph 그래프와 7개 노드
-├── tools/site_search.py 사이트 검색 도구 (목업)
-└── rag/retriever.py     호환성 지식 검색 (자리만 있음, 빈 결과)
-streamlit_app.py         에이전트 단독 검증 화면
+├── agents/graph.py      LangGraph 그래프와 8개 노드
+├── catalog.py           추천에 넣는 카탈로그 검색
+├── llm/ollama.py        채팅·임베딩
+├── ingest/              네이버 Open API와 갱신 주기
+├── tools/site_search.py 남아 있는 목업 도구. 그래프 검색은 catalog.py를 사용
+└── rag/                 Chroma 인덱스와 조회
+scripts/                 기준 시세, 실시간 수집, 재고 재확인. _probe는 조사 전용
+streamlit_app.py         에이전트 단독 화면
 ```
 
 ## 에이전트
 
 ```
-RequirementsAnalyzer → SearchPlanner → SiteSearcher → ResultNormalizer
+RequirementsAnalyzer → NoteReader → SearchPlanner → SiteSearcher → ResultNormalizer
   → CompatibilityChecker → RankerAndRecommender → Explainer
 ```
 
 - 각 노드는 `AgentState`의 일부만 반환하고, `steps`는 노드마다 누적됩니다.
-- 노드별 현재 동작과 교체 계획은 [아키텍처 문서](../Docs/Architecture/pcforge_architecture.md)에 있습니다.
-- `graph.stream()`으로 노드별 진행을 받을 수 있고, Streamlit 화면이 이를 사용합니다.
-
-### 목업 검색 도구
-
-`tools/site_search.py`의 상품명에는 `[목업]`이 붙고 `is_mock: true`입니다. 실제 사이트를 연동할 때는 각 사이트의 이용약관과 robots 기준을 지키고, 요청량을 제한하며, 캐시를 사용합니다.
-
-## 다음 작업 (Phase 1)
-
-1. Ollama 연동 후 `RequirementsAnalyzer`, `Explainer`를 LLM으로 교체
-2. Chroma + 로컬 임베딩으로 `rag/retriever.py` 구현
-3. `CompatibilityChecker`를 룰 + RAG 검증으로 교체
+- 노드별 동작은 [아키텍처 문서](../Docs/Architecture/pcforge_architecture.md)에 있습니다.
+- 수집 범위와 재고 값은 [카탈로그 가이드](../Docs/guidance/catalog.md)에 있습니다.
 
 ## 의존성
 
