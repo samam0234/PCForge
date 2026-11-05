@@ -1,8 +1,8 @@
 # 커밋 기록 템플릿
 
 > 이 파일은 삭제하지 않습니다.
-> 파일 경로: `Docs/branchs/YYMMDD_HHMM_[id]_[이름]_[브랜치].md`
-> 예시: `Docs/branchs/261105_0630_001_WHILE496_feature-recommend.md`
+> 파일 경로: `Docs/branchs/commits/YYMMDD_HHMM_[id]_[이름]_[브랜치].md` (반드시 `commits/` 하위 폴더)
+> 예시: `Docs/branchs/commits/261105_0740_001_WHILE496_feature-recommend.md`
 > 기록 파일도 같은 브랜치에 함께 커밋합니다.
 
 ## 기본 정보

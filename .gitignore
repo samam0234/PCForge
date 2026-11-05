@@ -11,6 +11,8 @@ backend/target/
 __pycache__/
 *.pyc
 .chroma/
+ai-server/data/chroma/
+data/catalog/live.json
 
 # Node (세부 항목은 frontend/.gitignore)
 node_modules/
