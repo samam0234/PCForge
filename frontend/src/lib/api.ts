@@ -136,6 +136,31 @@ export interface SavedSession {
 	recommendations: { product_name: string; price: number; site: string; reason: string }[];
 }
 
+export interface ChatTurn {
+	role: 'user' | 'assistant';
+	content: string;
+}
+
+export interface ChatPart {
+	id: string;
+	name: string;
+	category: string;
+	price: number;
+	price_kind: string;
+	shop: string;
+	condition: string;
+	grade: string;
+	url: string | null;
+}
+
+export type ChatEvent =
+	| { type: 'start'; model: string }
+	| { type: 'tool'; name: string; label: string }
+	| { type: 'tool_result'; name: string; summary: string }
+	| { type: 'token'; text: string }
+	| { type: 'done'; answer: string; parts: ChatPart[]; warnings: string[]; model: string; tool_rounds: number }
+	| { type: 'error'; message: string };
+
 function authHeaders(token?: string | null, json = false): Record<string, string> {
 	const headers: Record<string, string> = {};
 	if (json) headers['Content-Type'] = 'application/json';
@@ -251,4 +276,41 @@ export async function listSessions(token: string): Promise<SavedSession[]> {
 	if (!response.ok) throw new Error(await readError(response));
 	const body = (await response.json()) as { sessions: SavedSession[] };
 	return body.sessions;
+}
+
+/** 상담 응답을 줄 단위 이벤트로 읽어 onEvent에 차례로 넘긴다. */
+export async function streamChat(
+	messages: ChatTurn[],
+	token: string | null,
+	onEvent: (event: ChatEvent) => void,
+	signal: AbortSignal
+): Promise<void> {
+	let response: Response;
+	try {
+		response = await fetch(`${PUBLIC_API_BASE_URL}/api/chat`, {
+			method: 'POST',
+			headers: authHeaders(token, true),
+			body: JSON.stringify({ messages }),
+			signal
+		});
+	} catch (reason) {
+		if (signal.aborted) throw reason;
+		throw new Error('서버에 연결하지 못했습니다');
+	}
+	if (!response.ok) throw new Error(await readError(response));
+	if (!response.body) throw new Error('응답을 읽지 못했습니다');
+
+	const reader = response.body.getReader();
+	const decoder = new TextDecoder();
+	let buffer = '';
+	while (true) {
+		const { done, value } = await reader.read();
+		buffer += done ? decoder.decode() : decoder.decode(value, { stream: true });
+		const lines = buffer.split('\n');
+		buffer = done ? '' : (lines.pop() ?? '');
+		for (const line of lines) {
+			if (line.trim()) onEvent(JSON.parse(line) as ChatEvent);
+		}
+		if (done) return;
+	}
 }
