@@ -79,5 +79,6 @@ Docs/branchs/commits/YYMMDD_HHMM_[id]_[이름]_[브랜치].md
 | [032](commits/261105_0747_032_while_feature-docs.md) | `feature/docs` | `docs(branchs): 총 병합 기록 추가` (병합 기록) |
 | [033](commits/261105_0748_033_while_feature-repo-setup.md) | `feature/repo-setup` | `docs(branchs): 누락된 커밋 기록을 branchs/commits/ 하위 폴더로 이동` |
 | [034](commits/261105_0748_034_while_feature-backend.md) | `feature/backend` | `docs(branchs): 누락된 커밋 기록을 branchs/commits/ 하위 폴더로 이동` |
+| [035](commits/261105_0900_035_while_feature-live-catalog.md) | `feature/live-catalog` | `feat(data): 부품 기준 카탈로그와 호환 메모를 추가` |
 
 새 기록을 만들 때 이 표에도 한 줄을 추가합니다.
