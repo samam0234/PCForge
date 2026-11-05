@@ -45,6 +45,7 @@
 		</p>
 		<div class="hero-actions">
 			<a class="btn primary" href="#desk">목록 펼치기</a>
+			<a class="btn ghost" href="/assistant">편집자에게 묻기</a>
 			<a class="btn ghost" href="/journal">조립 노트 읽기</a>
 		</div>
 	</div>

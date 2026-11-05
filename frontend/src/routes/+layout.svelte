@@ -41,6 +41,7 @@
 			<div class="menu">
 				<a href="/" aria-current={path === '/' ? 'page' : undefined}>이번 호</a>
 				<a href="/#desk">지면</a>
+				<a href="/assistant" aria-current={path === '/assistant' ? 'page' : undefined}>상담</a>
 				<a href="/journal" aria-current={path.startsWith('/journal') ? 'page' : undefined}>조립 노트</a>
 				<a href="/history" aria-current={path === '/history' ? 'page' : undefined}>기록</a>
 			</div>
